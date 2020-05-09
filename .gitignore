@@ -1,3 +1,9 @@
 *
 !/**/
 !*.*
+
+.gdb_history
+peda-session*.txt
+.vscode
+**.o
+test_images
