@@ -1,6 +1,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "arpa/inet.h"
 
 #include "png.h"
 #include "../utils/version.h"
@@ -69,6 +70,7 @@ int png_open(Format_PNG png, char *filename) {
 void png_close(Format_PNG png) {
     if (png->name) free(png->name);
     if (png->fin)  fclose(png->fin);
+    if (png->IHDR) png_chunk_free(png->IHDR);
     free(png);
 }
 
@@ -126,7 +128,10 @@ png_chunk_t *png_chunk_next(Format_PNG png) {
             free(chunk);
             return NULL;
         }
-    } else chunk->data = NULL;
+    } else {
+        free(chunk->data);
+        chunk->data = NULL;
+    }
 
     /* Read CRC */
     rv = fread(&chunk->CRC, sizeof(int), 1, png->fin);
@@ -145,6 +150,45 @@ png_chunk_t *png_chunk_next(Format_PNG png) {
     }
 
     return chunk;
+}
+
+void png_chunk_free(png_chunk_t *chunk) {
+    if (chunk->data) free(chunk->data);
+    
+    free(chunk);
+}
+
+/*
+ * Extract the keyword from an iTXt chunk
+ */
+char *png_iTXt_keyword(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, "iTXt", 4) != 0) return NULL;
+
+    return (char *) chunk->data;
+}
+
+/*
+ * Extract the text value from an iTXt chunk
+ */
+char *png_iTXt_text(png_chunk_t *chunk) {
+    int c = strlen(chunk->data) + 3; /* Keyword + comp. flag + comp. method */
+    char *p = chunk->data + c;
+    char *buf;
+
+    c += strlen(p) + 1; /* Language tag */
+    p = chunk->data + c;
+
+    c += strlen(p) + 1; /* Translated keyword */
+    p = chunk->data + c;
+    
+    c = chunk->length - c;
+
+    buf = (char *) malloc(sizeof(char) * (c + 1));
+
+    strncpy(buf, p, c);
+    buf[c] = 0;
+
+    return buf;
 }
 
 /*

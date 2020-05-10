@@ -4,6 +4,7 @@
 #include <getopt.h>
 #include <errno.h>
 #include <poll.h>
+#include <string.h>
 
 #include "utils/iv_opts.h"
 #include "utils/types.h"
@@ -38,9 +39,19 @@ void help() {
 }
 
 void handle_png(Format_PNG png) {
-    int rv;
+    png_chunk_t *chunk;
+    
+    while (chunk = png_chunk_next(png)) {
+        if (strncmp(chunk->type, "iTXt", 4) == 0) {
+            char *text = png_iTXt_text(chunk);
+            printf("   %s: %s\n", png_iTXt_keyword(chunk), text);
+            free(text);
+        }
 
-    png_debug(png);
+        png_chunk_free(chunk);
+    }
+
+    // png_debug(png);
 }
 
 int main(int argc, char **argv) {
@@ -91,33 +102,32 @@ int main(int argc, char **argv) {
     }
 
     if (optind == argc) {
-        if (iv_opts.verbose) {
-            printf("No input files detected. Checking stdin...");
-        }
-
         // TODO Read from stdin
         struct pollfd ps = { 0, POLLIN, 0 };
 
         int rv = poll(&ps, 1, 0);
         if (rv == 0) {
             if (iv_opts.verbose) {
-                printf(" nothing in stdin.\n");
-                printf("Exiting...\n");
                 exit(1);
             } else {
                 usage(EXIT_FAILURE);
             }
         } else {
-            printf(" input located!");
             Format_PNG png = png_new();
-            png->fin = stdin;
+            rv = png_open(png, NULL);
+            if (rv != 0) {
+                png_close(png);
+                exit(EXIT_FAILURE);
+            }
             handle_png(png);
+            png_close(png);
         }
     }
 
     // TODO Read files
     for (i = optind; i < argc; i++) {
         Format_PNG png = png_new();
+        png_chunk_t *chunk;
         if (access(argv[i], R_OK) == -1) {
             // TODO Error message for bad file
             printf("File does not exist: %s\n", argv[i]);
@@ -130,9 +140,7 @@ int main(int argc, char **argv) {
             continue;
         }
 
-        while (png_chunk_next(png) != NULL);
-
-        // handle_png(png);
+        handle_png(png);
         png_close(png);
     }
 

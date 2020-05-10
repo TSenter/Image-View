@@ -38,6 +38,10 @@ void png_close(Format_PNG);
 
 /* PNG chunks */
 png_chunk_t *png_chunk_next(Format_PNG);
+void png_chunk_free(png_chunk_t *);
+
+char *png_iTXt_keyword(png_chunk_t *);
+char *png_iTXt_text(png_chunk_t *);
 
 /* Image attributes */
 int png_attr_w(Format_PNG);
