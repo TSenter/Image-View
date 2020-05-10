@@ -3,7 +3,9 @@
 #include <stdio.h>
 #include <getopt.h>
 #include <errno.h>
+#include <poll.h>
 
+#include "utils/iv_opts.h"
 #include "utils/types.h"
 #include "utils/version.h"
 #include "formats/png.h"
@@ -47,13 +49,17 @@ int main(int argc, char **argv) {
         { "version", no_argument, NULL, 'v' },
         { "help", optional_argument, NULL, 'h' },
         { "verbose", optional_argument, NULL, 'V' },
+        { "scan", no_argument, NULL, 's' },
         {NULL, 0, NULL, 0}, /* Last element must be all 0s */
     };
     
+    /* Default options */
+    iv_opts.verbose = 0;
+
     int option_index;
     int c;
     while (1) {
-        c = getopt_long(argc, argv, "vh::", options, &option_index);
+        c = getopt_long(argc, argv, "vh::V::s", options, &option_index);
 
         if (c == -1) break;
 
@@ -67,7 +73,12 @@ int main(int argc, char **argv) {
                 break;
 
             case 'V':
-                
+                iv_opts.verbose = 1;
+                printf("  ===== %s [%s] =====\n", IV_PROGRAM_NAME, IV_VERSION);
+                break;
+
+            case 's':
+                iv_opts.scan = 1;
                 break;
 
             case '?':
@@ -80,12 +91,24 @@ int main(int argc, char **argv) {
     }
 
     if (optind == argc) {
+        if (iv_opts.verbose) {
+            printf("No input files detected. Checking stdin...");
+        }
+
         // TODO Read from stdin
-        int c = fgetc(stdin);
-        if (feof(stdin)) {
-            usage(EXIT_FAILURE);
+        struct pollfd ps = { 0, POLLIN, 0 };
+
+        int rv = poll(&ps, 1, 0);
+        if (rv == 0) {
+            if (iv_opts.verbose) {
+                printf(" nothing in stdin.\n");
+                printf("Exiting...\n");
+                exit(1);
+            } else {
+                usage(EXIT_FAILURE);
+            }
         } else {
-            fputc(c, stdin);
+            printf(" input located!");
             Format_PNG png = png_new();
             png->fin = stdin;
             handle_png(png);
@@ -100,17 +123,18 @@ int main(int argc, char **argv) {
             printf("File does not exist: %s\n", argv[i]);
             continue;
         }
-        printf("Opening %s... ", argv[i]);
         rv = png_open(png, argv[i]);
 
         if (rv != 0) {
-            printf("error (%d)\n", rv);
             png_close(png);
             continue;
         }
 
-        printf("success!\n");
-        handle_png(png);
+        while (png_chunk_next(png) != NULL);
+
+        // handle_png(png);
         png_close(png);
     }
+
+    exit(EXIT_SUCCESS);
 }

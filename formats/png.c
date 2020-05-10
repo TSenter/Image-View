@@ -4,6 +4,7 @@
 
 #include "png.h"
 #include "../utils/version.h"
+#include "../utils/iv_opts.h"
 
 Format_PNG png_new() {
     Format_PNG png = (Format_PNG) malloc(sizeof(struct format_png_t));
@@ -21,7 +22,7 @@ Format_PNG png_new() {
  *          > 0 - file is not of type PNG
  */
 int png_open(Format_PNG png, char *filename) {
-    char buf[512];
+    char buf[PNG_SIG_SZ];
     int rv;
     if (filename == NULL) {
         png->name = NULL;
@@ -39,11 +40,19 @@ int png_open(Format_PNG png, char *filename) {
 
     /* Attempt to read the signature */
     rv = fread(buf, sizeof(char), PNG_SIG_SZ, png->fin);
+    if (iv_opts.verbose) {
+        printf("Reading signature... ");
+    } else if (iv_opts.scan) {
+        printf("[PNG] Read signature\n");
+    }
 
     if (rv != PNG_SIG_SZ) return 1;
 
     /* Validate the signature */
     if ((*(long long*) (&buf)) - SIG_PNG != 0) return 1;
+    if (iv_opts.verbose) {
+        printf("matched.\n");
+    }
 
     png->IHDR = png_chunk_next(png);
 
@@ -71,9 +80,21 @@ png_chunk_t *png_chunk_next(Format_PNG png) {
 
     /* Read chunk length */
     rv = fread(&chunk->length, PNG_CHNK_LEN, 1, png->fin);
-    if (rv != 1) {
+    if (feof(png->fin)) {
         free(chunk);
         return NULL;
+    }
+    if (rv != 1) {
+        if (iv_opts.verbose) {
+            printf("Chunk: Error (chunk length)\n");
+        }
+        free(chunk);
+        return NULL;
+    }
+
+    if (iv_opts.verbose) {
+        printf("Chunk: ");
+        fflush(stdout);
     }
 
     /* Normalize length */
@@ -82,6 +103,9 @@ png_chunk_t *png_chunk_next(Format_PNG png) {
     /* Read chunk type */
     rv = fread(chunk->type, 1, PNG_CHNK_TYPE_SZ, png->fin);
     if (rv != PNG_CHNK_TYPE_SZ) {
+        if (iv_opts.verbose) {
+            printf("Error (chunk type)\n");
+        }
         fprintf(stderr, "[%s/png]: Unexpected EOF in reading chunk type, read %d/%d chunk type bytes\n", IV_PROGRAM_NAME, rv, PNG_CHNK_TYPE_SZ);
         free(chunk);
         return NULL;
@@ -94,6 +118,9 @@ png_chunk_t *png_chunk_next(Format_PNG png) {
     if (chunk->length != 0) {
         rv = fread(chunk->data, 1, chunk->length, png->fin);
         if (rv != chunk->length) {
+            if (iv_opts.verbose) {
+                printf("Error (chunk data)\n");
+            }
             fprintf(stderr, "[%s/png]: Unexpected EOF in reading chunk '%.4s', read %d/%d chunk data bytes\n", IV_PROGRAM_NAME, chunk->type, rv, chunk->length);
             free(chunk->data);
             free(chunk);
@@ -104,10 +131,17 @@ png_chunk_t *png_chunk_next(Format_PNG png) {
     /* Read CRC */
     rv = fread(&chunk->CRC, sizeof(int), 1, png->fin);
     if (rv != 1) {
-        fprintf(stderr, "[img");
+        if (iv_opts.verbose) {
+            printf("Error (chunk CRC)\n");
+        }
+        fprintf(stderr, "[%s/png]: Unexpected EOF in reading CRC for chunk '%.4s', read %d/%d bytes\n", IV_PROGRAM_NAME, chunk->type, rv, 4);
         free(chunk->data);
         free(chunk);
         return NULL;
+    }
+
+    if (iv_opts.verbose) {
+        printf("%.4s (%d byte%s)\n", chunk->type, chunk->length, chunk->length != 1 ? "s" : "");
     }
 
     return chunk;
