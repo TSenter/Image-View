@@ -311,6 +311,26 @@ char png_tIME_second(png_chunk_t *chunk) {
 }
 
 /*
+ * Extract the last modified date in ISO 8601 format
+ * 
+ * Returns: NULL on error
+ *          Last modified date in ISO 8601 format: YYYY-MM-DDTHH:MM:SS+00:00
+ */
+char *png_tIME_iso8601(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_TIME, PNG_CHNK_LEN) != 0) return NULL;
+
+    char *time = (char *) malloc(sizeof(char) * 26); // Prefer not to hardcode the length in
+
+    sprintf(time, "%04hd-%02hhd-%02hhdT%02hhd:%02hhd:%02hhd+00:00",
+            ntohs(*((short *) (chunk->data))),
+            *((char *) (chunk->data + 2)),
+            *((char *) (chunk->data + 3)),
+            *((char *) (chunk->data + 4)),
+            *((char *) (chunk->data + 5)),
+            *((char *) (chunk->data + 6)));
+}
+
+/*
  * Fetch the width of the given image
  */
 int png_attr_w(Format_PNG png) {

@@ -62,6 +62,7 @@ char png_tIME_day(png_chunk_t *);
 char png_tIME_hour(png_chunk_t *);
 char png_tIME_minute(png_chunk_t *);
 char png_tIME_second(png_chunk_t *);
+char *png_tIME_iso8601(png_chunk_t *);
 
 /* Image attributes */
 int png_attr_w(Format_PNG);
