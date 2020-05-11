@@ -1,7 +1,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "arpa/inet.h"
+#include <arpa/inet.h>
 
 #include "png.h"
 #include "../utils/version.h"
@@ -162,15 +162,62 @@ void png_chunk_free(png_chunk_t *chunk) {
  * Extract the keyword from an iTXt chunk
  */
 char *png_iTXt_keyword(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, "iTXt", 4) != 0) return NULL;
+    if (strncmp(chunk->type, PNG_CHUNK_TEXT_INT, PNG_CHNK_LEN) != 0) return NULL;
 
-    return (char *) chunk->data;
+    return strdup((char *) chunk->data);
+}
+
+/*
+ * Extract the keyword from a tEXt chunk
+ * 
+ * Returns: NULL - on error
+ *          keyword on success; must be free'd
+ */
+char *png_tEXt_keyword(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_TEXT, PNG_CHNK_LEN) != 0) return NULL;
+
+    return strdup(chunk->data);
+}
+
+/*
+ * Extract the text from a tEXt chunk
+ * 
+ * Returns: NULL - on error
+ *          keyword on success; must be free'd
+ */
+char *png_tEXt_text(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_TEXT, PNG_CHNK_LEN) != 0) return NULL;
+
+    int c = strlen(chunk->data) + 1;
+    char *text = (char *) malloc(chunk->length - c + 1);
+    
+    strncpy(text, chunk->data + c, chunk->length - c);
+    text[chunk->length - c] = 0;
+
+    return text;
+}
+
+/*
+ * Extract the language tag from an iTXt chunk
+ * 
+ * Returns: NULL - on error
+ *          ""   - no language tag available; must be free'd
+ *          string containing ISO 646 hyphen-separated words; must be free'd
+ */
+char *png_iTXt_lang(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_TEXT_INT, PNG_CHNK_LEN) != 0) return NULL;
+
+    if (chunk->length <= strlen(chunk->data) + 3) return NULL;
+
+    return strdup(chunk->data + strlen(chunk->data) + 3);
 }
 
 /*
  * Extract the text value from an iTXt chunk
  */
 char *png_iTXt_text(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_TEXT_INT, PNG_CHNK_LEN) != 0) return NULL;
+
     int c = strlen(chunk->data) + 3; /* Keyword + comp. flag + comp. method */
     char *p = chunk->data + c;
     char *buf;
@@ -189,6 +236,78 @@ char *png_iTXt_text(png_chunk_t *chunk) {
     buf[c] = 0;
 
     return buf;
+}
+
+/*
+ * Extract the year from the last modified date
+ * 
+ * Returns: -1 on error
+ *          Complete year (eg. 1995, not 95) on success
+ */
+short png_tIME_year(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_TIME, PNG_CHNK_LEN) != 0) return -1;
+
+    return ntohs(*((short *) (chunk->data)));
+}
+
+/*
+ * Extract the month from the last modified date
+ * 
+ * Returns: -1 on error
+ *          Month (1-12) on success
+ */
+char png_tIME_month(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_TIME, PNG_CHNK_LEN) != 0) return -1;
+
+    return *((char *) (chunk->data + 2));
+}
+
+/*
+ * Extract the day from the last modified date
+ * 
+ * Returns: -1 on error
+ *          Day (1-31) on success
+ */
+char png_tIME_day(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_TIME, PNG_CHNK_LEN) != 0) return -1;
+
+    return *((char *) (chunk->data + 3));
+}
+
+/*
+ * Extract the hour from the last modified date
+ * 
+ * Returns: -1 on error
+ *          Hour (0-23) on success
+ */
+char png_tIME_hour(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_TIME, PNG_CHNK_LEN) != 0) return -1;
+
+    return *((char *) (chunk->data + 4));
+}
+
+/*
+ * Extract the minute from the last modified date
+ * 
+ * Returns: -1 on error
+ *          Minute (0-59) on success
+ */
+char png_tIME_minute(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_TIME, PNG_CHNK_LEN) != 0) return -1;
+
+    return *((char *) (chunk->data + 5));
+}
+
+/*
+ * Extract the second from the last modified date
+ * 
+ * Returns: -1 on error
+ *          Minute (0-60 to allow for leap seconds) on success
+ */
+char png_tIME_second(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_TIME, PNG_CHNK_LEN) != 0) return -1;
+
+    return *((char *) (chunk->data + 6));
 }
 
 /*
