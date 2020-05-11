@@ -43,9 +43,30 @@ void handle_png(Format_PNG png) {
     
     while (chunk = png_chunk_next(png)) {
         if (strncmp(chunk->type, "iTXt", 4) == 0) {
-            char *text = png_iTXt_text(chunk);
-            printf("   %s: %s\n", png_iTXt_keyword(chunk), text);
+            char *text = png_iTXt_keyword(chunk);
+            printf("   %s", text); free(text);
+            text = png_iTXt_text(chunk);
+            printf(": %s", text); free(text);
+
+            text = png_iTXt_lang(chunk);
+            if (text && *text) {
+                printf(" (lang: %s)", text);
+            }
+            printf("\n");
             free(text);
+        } else if (strncmp(chunk->type, PNG_CHUNK_TEXT, PNG_CHNK_LEN) == 0) {
+            char *text = png_tEXt_keyword(chunk);
+            printf("   %s", text); free(text);
+            text = png_tEXt_text(chunk);
+            printf(": %s\n", text); free(text);
+        } else if (strncmp(chunk->type, PNG_CHUNK_TIME, PNG_CHNK_LEN) == 0) {
+            printf("   Timestamp: %d-%02d-%02dT%02d:%02d:%02d\n",
+                   png_tIME_year(chunk),
+                   png_tIME_month(chunk),
+                   png_tIME_day(chunk),
+                   png_tIME_hour(chunk),
+                   png_tIME_minute(chunk),
+                   png_tIME_second(chunk));
         }
 
         png_chunk_free(chunk);
