@@ -333,33 +333,94 @@ char *png_tIME_iso8601(png_chunk_t *chunk) {
 /*
  * Fetch the width of the given image
  */
-int png_attr_w(Format_PNG png) {
+int png_attr_width(Format_PNG png) {
     return ntohl(*((int *) png->IHDR->data));
 }
 
 /*
  * Fetch the height of the given image
  */
-int png_attr_h(Format_PNG png) {
+int png_attr_height(Format_PNG png) {
     return ntohl(*((int *) (png->IHDR->data + 4)));
 }
 
-// TODO Remove when no longer needed
-void png_debug(Format_PNG png) {
-    printf("%-25s | %u x %u pixels\n", png->name, png_attr_w(png), png_attr_h(png));
-}
-
-/* 
- * Extract all metadata from a PNG image
+/*
+ * Fetch the bit depth of the given image
  * 
- * Returns: > 0 - total number of metadata items extracted
- *            0 - metadata already extracted
- *          < 0 - an error occurred
+ * Returns: -1 on error
+ *          bit depth on success
  */
-int png_extract_meta_all(Format_PNG png) {
+char png_attr_bit_depth(Format_PNG png) {
+    if (png == NULL) return -1;
 
+    if (png->IHDR == NULL || png->IHDR->data == NULL) return -1;
+
+    if (png->IHDR->length < 9) return -1;
+
+    return *((char *) png->IHDR->data + 8);
 }
 
-int png_extract_meta(Format_PNG png, char *key, IVValue val) {
+/*
+ * Fetch the color type of the given image
+ * 
+ * Returns: -1 on error
+ *          color type on success
+ */
+char png_attr_col_type(Format_PNG png) {
+    if (png == NULL) return -1;
 
+    if (png->IHDR == NULL || png->IHDR->data == NULL) return -1;
+
+    if (png->IHDR->length < 10) return -1;
+
+    return *((char *) png->IHDR->data + 9);
+}
+
+/*
+ * Fetch the compression method of the given image
+ * 
+ * Returns: -1 on error
+ *          compression method on success
+ */
+char png_attr_comp_method(Format_PNG png) {
+    if (png == NULL) return -1;
+
+    if (png->IHDR == NULL || png->IHDR->data == NULL) return -1;
+
+    if (png->IHDR->length < 11) return -1;
+    
+    return *((char *) png->IHDR->data + 10);
+}
+
+/*
+ * Fetch the filter method of the given image
+ * 
+ * Returns: -1 on error
+ *          filter method on success
+ */
+char png_attr_filter_method(Format_PNG png) {
+    if (png == NULL) return -1;
+
+    if (png->IHDR == NULL || png->IHDR->data == NULL) return -1;
+
+    if (png->IHDR->length < 12) return -1;
+    
+    return *((char *) png->IHDR->data + 11);
+}
+
+/*
+ * Fetch the interlace method of the given image
+ * 
+ * Returns: -1 on error
+ *          0 on success (no interlace)
+ *          1 on success (Adam7 interlace)
+ */
+char png_attr_il_method(Format_PNG png) {
+    if (png == NULL) return -1;
+
+    if (png->IHDR == NULL || png->IHDR->data == NULL) return -1;
+
+    if (png->IHDR->length < 13) return -1;
+    
+    return *((char *) png->IHDR->data + 12);
 }

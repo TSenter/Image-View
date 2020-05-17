@@ -65,11 +65,12 @@ char png_tIME_second(png_chunk_t *);
 char *png_tIME_iso8601(png_chunk_t *);
 
 /* Image attributes */
-int png_attr_w(Format_PNG);
-int png_attr_h(Format_PNG);
-
-void png_debug(Format_PNG);
-
-int png_extract_meta(Format_PNG, char *, IVValue);
+int png_attr_width(Format_PNG);
+int png_attr_height(Format_PNG);
+char png_attr_bit_depth(Format_PNG);
+char png_attr_col_type(Format_PNG);
+char png_attr_comp_method(Format_PNG);
+char png_attr_filter_method(Format_PNG);
+char png_attr_il_method(Format_PNG);
 
 #endif
