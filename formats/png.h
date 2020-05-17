@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include "../utils/types.h"
 
-#define SIG_PNG 0x0A1A0A0D474E5089
+#define PNG_SIG 0x0A1A0A0D474E5089
 #define PNG_SIG_SZ 8
 #define PNG_CHNK_LEN 4
 #define PNG_CHNK_TYPE_SZ 4
@@ -13,6 +13,7 @@
 #define PNG_CHUNK_PALETTE         "PLTE"
 #define PNG_CHUNK_DATA            "IDAT"
 #define PNG_CHUNK_END             "IEND"
+#define PNG_CHUNK_PHYS            "pHYs"
 #define PNG_CHUNK_TIME            "tIME"
 #define PNG_CHUNK_TEXT_INT        "iTXt"
 #define PNG_CHUNK_TEXT            "tEXt"
@@ -49,8 +50,17 @@ void png_close(Format_PNG);
 png_chunk_t *png_chunk_next(Format_PNG);
 void png_chunk_free(png_chunk_t *);
 
+int png_pHYs_ppuX(png_chunk_t *);
+int png_pHYs_ppuY(png_chunk_t *);
+char png_pHYs_unit(png_chunk_t *);
+
 char *png_tEXt_keyword(png_chunk_t *);
 char *png_tEXt_text(png_chunk_t *);
+
+char *png_zTXt_keyword(png_chunk_t *);
+char png_zTXt_method(png_chunk_t *);
+void *png_zTXt_data(png_chunk_t *);
+int png_zTXt_length(png_chunk_t *);
 
 char *png_iTXt_keyword(png_chunk_t *);
 char *png_iTXt_lang(png_chunk_t *);

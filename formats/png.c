@@ -50,7 +50,7 @@ int png_open(Format_PNG png, char *filename) {
     if (rv != PNG_SIG_SZ) return 1;
 
     /* Validate the signature */
-    if ((*(long long*) (&buf)) - SIG_PNG != 0) return 1;
+    if ((*(long long*) (&buf)) - PNG_SIG != 0) return 1;
     if (iv_opts.verbose) {
         printf("matched.\n");
     }
@@ -159,12 +159,46 @@ void png_chunk_free(png_chunk_t *chunk) {
 }
 
 /*
- * Extract the keyword from an iTXt chunk
+ * Extract the pixels per unit along the X axis
+ * 
+ * Returns: -1 on error
+ *          pixels per unit on success
  */
-char *png_iTXt_keyword(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_TEXT_INT, PNG_CHNK_LEN) != 0) return NULL;
+int png_pHYs_ppuX(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_PHYS, PNG_CHNK_LEN) != 0) return -1;
 
-    return strdup((char *) chunk->data);
+    if (chunk->length < 4) return -1;
+
+    return ntohl(*((int *)chunk->data));
+}
+
+/*
+ * Extract the pixels per unit along the Y axis
+ * 
+ * Returns: -1 on error
+ *          pixels per unit on success
+ */
+int png_pHYs_ppuY(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_PHYS, PNG_CHNK_LEN) != 0) return -1;
+
+    if (chunk->length < 8) return -1;
+
+    return ntohl(*((int *)(chunk->data + 4)));
+}
+
+/*
+ * Extract the unit for pixels per unit
+ * 
+ * Returns: -1 on error
+ *           0 for unknown unit
+ *           1 for meter
+ */
+char png_pHYs_unit(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_PHYS, PNG_CHNK_LEN) != 0) return -1;
+
+    if (chunk->length < 9) return -1;
+
+    return *((char *) chunk->data + 9);
 }
 
 /*
@@ -195,6 +229,69 @@ char *png_tEXt_text(png_chunk_t *chunk) {
     text[chunk->length - c] = 0;
 
     return text;
+}
+
+/*
+ * Extract the keyword from a zTXt chunk
+ * 
+ * Returns: NULL on error
+ *          keyword on success; must be free'd
+ */
+char *png_zTXt_keyword(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_TEXT, PNG_CHNK_LEN) != 0) return NULL;
+
+    if (chunk->data == NULL || chunk->length == 0) return NULL;
+
+    return strdup(chunk->data);
+}
+
+/*
+ * Extract the compression method from a zTXt chunk
+ * 
+ * Returns: -1 on error
+ *          compression method (>= 0)
+ */
+char png_zTXt_method(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_TEXT_COMPRESSED, PNG_CHNK_LEN) != 0) return NULL;
+
+    if (chunk->data == NULL || chunk->length == 0) return NULL;
+
+    return *((char *) chunk->data + strlen(chunk->data) + 1);
+}
+
+/*
+ * Extract the compressed datastream
+ */
+void *png_zTXt_data(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_TEXT_COMPRESSED, PNG_CHNK_LEN) != 0) return NULL;
+
+    if (chunk->data == NULL || chunk->length == 0) return NULL;
+
+    int len = strlen(chunk->data) + 2;
+    int n = chunk->length - len;
+    void *data = malloc(n);
+
+    return memcpy(data, chunk->data + len, n);
+}
+
+int png_zTXt_length(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_TEXT_COMPRESSED, PNG_CHNK_LEN) != 0) return NULL;
+
+    if (chunk->data == NULL || chunk->length == 0) return NULL;
+
+    return chunk->length - (strlen(chunk->data) + 2);
+}
+
+/*
+ * Extract the keyword from an iTXt chunk
+ * 
+ * Returns: NULL on error
+ *          keyword on success
+ */
+char *png_iTXt_keyword(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_TEXT_INT, PNG_CHNK_LEN) != 0) return NULL;
+
+    return strdup((char *) chunk->data);
 }
 
 /*
