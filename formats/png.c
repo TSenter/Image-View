@@ -7,6 +7,12 @@
 #include "../utils/version.h"
 #include "../utils/iv_opts.h"
 
+/*
+ * Initialize an empty PNG image
+ * 
+ * Returns: NULL on error
+ *          Initialized Formant_PNG type
+ */
 Format_PNG png_new() {
     Format_PNG png = (Format_PNG) malloc(sizeof(struct format_png_t));
 
@@ -66,6 +72,8 @@ int png_open(Format_PNG png, char *filename) {
 
 /*
  * Close the png file and free the resources associated with it
+ * 
+ * Returns: void
  */
 void png_close(Format_PNG png) {
     if (png->name) free(png->name);
@@ -74,6 +82,13 @@ void png_close(Format_PNG png) {
     free(png);
 }
 
+/*
+ * Extract the next chunk from the PNG image
+ * 
+ * Returns: -1 on error
+ *          NULL when a valid chunk cannot be read (EOF)
+ *          Valid chunk from PNG image
+ */
 png_chunk_t *png_chunk_next(Format_PNG png) {
     if (feof(png->fin) || ferror(png->fin)) return NULL;
     int rv;
@@ -152,6 +167,11 @@ png_chunk_t *png_chunk_next(Format_PNG png) {
     return chunk;
 }
 
+/*
+ * Free the memory allocated to a png chunk
+ * 
+ * Returns: void
+ */
 void png_chunk_free(png_chunk_t *chunk) {
     if (chunk->data) free(chunk->data);
     
@@ -204,7 +224,7 @@ char png_pHYs_unit(png_chunk_t *chunk) {
 /*
  * Extract the keyword from a tEXt chunk
  * 
- * Returns: NULL - on error
+ * Returns: NULL on error
  *          keyword on success; must be free'd
  */
 char *png_tEXt_keyword(png_chunk_t *chunk) {
@@ -216,7 +236,7 @@ char *png_tEXt_keyword(png_chunk_t *chunk) {
 /*
  * Extract the text from a tEXt chunk
  * 
- * Returns: NULL - on error
+ * Returns: NULL on error
  *          keyword on success; must be free'd
  */
 char *png_tEXt_text(png_chunk_t *chunk) {
@@ -260,7 +280,10 @@ char png_zTXt_method(png_chunk_t *chunk) {
 }
 
 /*
- * Extract the compressed datastream
+ * Extract the compressed text datastream
+ * 
+ * Returns: NULL on error
+ *          Pointer to block containing datastream; must be free'd
  */
 void *png_zTXt_data(png_chunk_t *chunk) {
     if (strncmp(chunk->type, PNG_CHUNK_TEXT_COMPRESSED, PNG_CHNK_LEN) != 0) return NULL;
@@ -274,6 +297,12 @@ void *png_zTXt_data(png_chunk_t *chunk) {
     return memcpy(data, chunk->data + len, n);
 }
 
+/*
+ * Extract the length of the compressed text datastream
+ * 
+ * Returns: -1 on error
+ *          Length of datastream
+ */
 int png_zTXt_length(png_chunk_t *chunk) {
     if (strncmp(chunk->type, PNG_CHUNK_TEXT_COMPRESSED, PNG_CHNK_LEN) != 0) return NULL;
 
@@ -297,8 +326,8 @@ char *png_iTXt_keyword(png_chunk_t *chunk) {
 /*
  * Extract the language tag from an iTXt chunk
  * 
- * Returns: NULL - on error
- *          ""   - no language tag available; must be free'd
+ * Returns: NULL on error
+ *          Empty string if no language tag available; must be free'd
  *          string containing ISO 646 hyphen-separated words; must be free'd
  */
 char *png_iTXt_lang(png_chunk_t *chunk) {
@@ -311,6 +340,9 @@ char *png_iTXt_lang(png_chunk_t *chunk) {
 
 /*
  * Extract the text value from an iTXt chunk
+ * 
+ * Returns: NULL on error
+ *          string containing text from an iTXt chunk on success; must be free'd
  */
 char *png_iTXt_text(png_chunk_t *chunk) {
     if (strncmp(chunk->type, PNG_CHUNK_TEXT_INT, PNG_CHNK_LEN) != 0) return NULL;
@@ -399,7 +431,7 @@ char png_tIME_minute(png_chunk_t *chunk) {
  * Extract the second from the last modified date
  * 
  * Returns: -1 on error
- *          Minute (0-60 to allow for leap seconds) on success
+ *          Second (0-60 to allow for leap seconds) on success
  */
 char png_tIME_second(png_chunk_t *chunk) {
     if (strncmp(chunk->type, PNG_CHUNK_TIME, PNG_CHNK_LEN) != 0) return -1;
@@ -429,6 +461,9 @@ char *png_tIME_iso8601(png_chunk_t *chunk) {
 
 /*
  * Fetch the width of the given image
+ * 
+ * Returns: -1 on error
+ *          width of image (in pixels) on success
  */
 int png_attr_width(Format_PNG png) {
     return ntohl(*((int *) png->IHDR->data));
@@ -436,6 +471,9 @@ int png_attr_width(Format_PNG png) {
 
 /*
  * Fetch the height of the given image
+ * 
+ * Returns: -1 on error
+ *          height of image (in pixels) on success
  */
 int png_attr_height(Format_PNG png) {
     return ntohl(*((int *) (png->IHDR->data + 4)));
