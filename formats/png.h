@@ -37,6 +37,7 @@ typedef struct format_png_t {
     png_chunk_t *IHDR;
 
     FILE *fin;
+    unsigned long long bytes;
 } *Format_PNG;
 
 /* Function signatures */

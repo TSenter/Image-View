@@ -5,7 +5,6 @@
 
 #include "png.h"
 #include "../utils/version.h"
-#include "../utils/iv_opts.h"
 
 /*
  * Initialize an empty PNG image
@@ -16,7 +15,13 @@
 Format_PNG png_new() {
     Format_PNG png = (Format_PNG) malloc(sizeof(struct format_png_t));
 
+    if (png == NULL) return NULL;
+
     // TODO Initialize PNG image
+    png->IHDR = NULL;
+    png->fin = NULL;
+    png->name = NULL;
+    png->bytes = 0;
 
     return png;
 }
@@ -47,23 +52,18 @@ int png_open(Format_PNG png, char *filename) {
 
     /* Attempt to read the signature */
     rv = fread(buf, sizeof(char), PNG_SIG_SZ, png->fin);
-    if (iv_opts.verbose) {
-        printf("Reading signature... ");
-    } else if (iv_opts.scan) {
-        printf("[PNG] Read signature\n");
-    }
 
     if (rv != PNG_SIG_SZ) return 1;
+    png->bytes += sizeof(char) * rv;
 
     /* Validate the signature */
     if ((*(long long*) (&buf)) - PNG_SIG != 0) return 1;
-    if (iv_opts.verbose) {
-        printf("matched.\n");
-    }
 
     png->IHDR = png_chunk_next(png);
 
-    if (png->IHDR == NULL) {
+    if (png->IHDR == (png_chunk_t *) -1) {
+        free(png->name);
+        fclose(png->fin);
         return -1;
     }
 
@@ -90,8 +90,9 @@ void png_close(Format_PNG png) {
  *          Valid chunk from PNG image
  */
 png_chunk_t *png_chunk_next(Format_PNG png) {
-    if (feof(png->fin) || ferror(png->fin)) return NULL;
+    int read = 0;
     int rv;
+    if (feof(png->fin) || ferror(png->fin)) return (png_chunk_t *) -1;
 
     png_chunk_t *chunk = (png_chunk_t *) malloc(sizeof(png_chunk_t));
 
@@ -102,31 +103,24 @@ png_chunk_t *png_chunk_next(Format_PNG png) {
         return NULL;
     }
     if (rv != 1) {
-        if (iv_opts.verbose) {
-            printf("Chunk: Error (chunk length)\n");
-        }
         free(chunk);
-        return NULL;
-    }
 
-    if (iv_opts.verbose) {
-        printf("Chunk: ");
-        fflush(stdout);
+        return (png_chunk_t *) -1;
     }
+    read += sizeof(char) * rv;
 
     /* Normalize length */
     chunk->length = ntohl(chunk->length);
 
     /* Read chunk type */
-    rv = fread(chunk->type, 1, PNG_CHNK_TYPE_SZ, png->fin);
+    rv = fread(chunk->type, sizeof(char), PNG_CHNK_TYPE_SZ, png->fin);
     if (rv != PNG_CHNK_TYPE_SZ) {
-        if (iv_opts.verbose) {
-            printf("Error (chunk type)\n");
-        }
+        fseek(png->fin, -1 * read, SEEK_CUR);
         fprintf(stderr, "[%s/png]: Unexpected EOF in reading chunk type, read %d/%d chunk type bytes\n", IV_PROGRAM_NAME, rv, PNG_CHNK_TYPE_SZ);
         free(chunk);
         return NULL;
     }
+    read += sizeof(char) * rv;
 
     /* Allocate memory for chunk data */
     chunk->data = malloc(chunk->length);
@@ -135,14 +129,13 @@ png_chunk_t *png_chunk_next(Format_PNG png) {
     if (chunk->length != 0) {
         rv = fread(chunk->data, 1, chunk->length, png->fin);
         if (rv != chunk->length) {
-            if (iv_opts.verbose) {
-                printf("Error (chunk data)\n");
-            }
+            fseek(png->fin, -1 * read, SEEK_CUR);
             fprintf(stderr, "[%s/png]: Unexpected EOF in reading chunk '%.4s', read %d/%d chunk data bytes\n", IV_PROGRAM_NAME, chunk->type, rv, chunk->length);
             free(chunk->data);
             free(chunk);
             return NULL;
         }
+        read += rv;
     } else {
         free(chunk->data);
         chunk->data = NULL;
@@ -151,18 +144,13 @@ png_chunk_t *png_chunk_next(Format_PNG png) {
     /* Read CRC */
     rv = fread(&chunk->CRC, sizeof(int), 1, png->fin);
     if (rv != 1) {
-        if (iv_opts.verbose) {
-            printf("Error (chunk CRC)\n");
-        }
+        fseek(png->fin, -1 * read, SEEK_CUR);
         fprintf(stderr, "[%s/png]: Unexpected EOF in reading CRC for chunk '%.4s', read %d/%d bytes\n", IV_PROGRAM_NAME, chunk->type, rv, 4);
         free(chunk->data);
         free(chunk);
         return NULL;
     }
-
-    if (iv_opts.verbose) {
-        printf("%.4s (%d byte%s)\n", chunk->type, chunk->length, chunk->length != 1 ? "s" : "");
-    }
+    read += sizeof(int) * rv;
 
     return chunk;
 }
@@ -272,9 +260,9 @@ char *png_zTXt_keyword(png_chunk_t *chunk) {
  *          compression method (>= 0)
  */
 char png_zTXt_method(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_TEXT_COMPRESSED, PNG_CHNK_LEN) != 0) return NULL;
+    if (strncmp(chunk->type, PNG_CHUNK_TEXT_COMPRESSED, PNG_CHNK_LEN) != 0) return -1;
 
-    if (chunk->data == NULL || chunk->length == 0) return NULL;
+    if (chunk->data == NULL || chunk->length == 0) return -1;
 
     return *((char *) chunk->data + strlen(chunk->data) + 1);
 }
