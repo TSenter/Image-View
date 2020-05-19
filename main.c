@@ -16,7 +16,8 @@ void usage(int exit_code) {
         "Usage: %s [options...] [command] <file1> [file2...]\n\n"
         "Options:\n"
         "-h, --help [command]    Get help on %s (or [command])\n"
-        "-v, --version           Print version information\n",
+        "-v, --version           Print version information\n"
+        "-s, --scan              Scan the chunks of each image\n",
         USAGE_PROGRAM_NAME, USAGE_PROGRAM_NAME);
     exit(exit_code);
 }
@@ -42,7 +43,13 @@ void handle_png(Format_PNG png) {
     png_chunk_t *chunk;
     
     while (chunk = png_chunk_next(png)) {
-        if (strncmp(chunk->type, "iTXt", 4) == 0) {
+        printf("  Chunk: ");
+        if (chunk == ((png_chunk_t *) -1)) {
+            printf("error\n");
+            break;
+        }
+        printf("%.4s (%d)\n", chunk->type, chunk->length);
+        if (strncmp(chunk->type, PNG_CHUNK_TEXT_INT, 4) == 0) {
             char *text = png_iTXt_keyword(chunk);
             printf("   %s", text); free(text);
             text = png_iTXt_text(chunk);
@@ -71,12 +78,10 @@ void handle_png(Format_PNG png) {
 
         png_chunk_free(chunk);
     }
-
-    // png_debug(png);
 }
 
 int main(int argc, char **argv) {
-    int i, rv;
+    int i, rv, n, len = 0;
     const struct option options[] = {
         { "version", no_argument, NULL, 'v' },
         { "help", optional_argument, NULL, 'h' },
@@ -140,20 +145,32 @@ int main(int argc, char **argv) {
                 png_close(png);
                 exit(EXIT_FAILURE);
             }
-            handle_png(png);
+            if (iv_opts.scan) {
+                handle_png(png);
+            }
             png_close(png);
         }
     }
 
     // TODO Read files
     for (i = optind; i < argc; i++) {
+        n = strlen(argv[i]);
+        if (n > len) len = n;
+    }
+    
+    n = argc - optind;
+    for (i = optind; i < argc; i++) {
         Format_PNG png = png_new();
         png_chunk_t *chunk;
         if (access(argv[i], R_OK) == -1) {
             // TODO Error message for bad file
-            printf("File does not exist: %s\n", argv[i]);
+            printf("Could not open file %s\n", argv[i]);
             continue;
         }
+        if (n != 1) {
+            printf("%s %.*s\n", argv[i], (int) (len - strlen(argv[i]) + 7), "--------------------------------------");
+        }
+
         rv = png_open(png, argv[i]);
 
         if (rv != 0) {
@@ -161,7 +178,9 @@ int main(int argc, char **argv) {
             continue;
         }
 
-        handle_png(png);
+        if (iv_opts.scan) {
+            handle_png(png);
+        }
         png_close(png);
     }
 
