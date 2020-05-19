@@ -304,9 +304,9 @@ void *png_zTXt_data(png_chunk_t *chunk) {
  *          Length of datastream
  */
 int png_zTXt_length(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_TEXT_COMPRESSED, PNG_CHNK_LEN) != 0) return NULL;
+    if (strncmp(chunk->type, PNG_CHUNK_TEXT_COMPRESSED, PNG_CHNK_LEN) != 0) return -1;
 
-    if (chunk->data == NULL || chunk->length == 0) return NULL;
+    if (chunk->data == NULL || chunk->length == 0) return -1;
 
     return chunk->length - (strlen(chunk->data) + 2);
 }
@@ -466,6 +466,12 @@ char *png_tIME_iso8601(png_chunk_t *chunk) {
  *          width of image (in pixels) on success
  */
 int png_attr_width(Format_PNG png) {
+    if (png == NULL) return -1;
+
+    if (png->IHDR == NULL || png->IHDR->data == NULL) return -1;
+
+    if (png->IHDR->length < 4) return -1;
+
     return ntohl(*((int *) png->IHDR->data));
 }
 
@@ -476,6 +482,12 @@ int png_attr_width(Format_PNG png) {
  *          height of image (in pixels) on success
  */
 int png_attr_height(Format_PNG png) {
+    if (png == NULL) return -1;
+
+    if (png->IHDR == NULL || png->IHDR->data == NULL) return -1;
+    
+    if (png->IHDR->length < 8) return -1;
+
     return ntohl(*((int *) (png->IHDR->data + 4)));
 }
 
