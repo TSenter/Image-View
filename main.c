@@ -74,6 +74,15 @@ void handle_png(Format_PNG png) {
                    png_tIME_hour(chunk),
                    png_tIME_minute(chunk),
                    png_tIME_second(chunk));
+        } else if (strncmp(chunk->type, PNG_CHUNK_PALETTE, PNG_CHNK_LEN) == 0) {
+            int len = png_PLTE_length(chunk), i;
+            char **palette = png_PLTE_get(chunk);
+            printf("    Entries: %d\n", len);
+            for (i = 0; i < 10 && i < len; i++) {
+                printf("      #%d: 0x%02hhx%02hhx%02hhx\n", i, palette[i][0], palette[i][1], palette[i][2]);
+            }
+            if (i != len) printf("      ...\n");
+            png_PLTE_free(palette, len);
         }
 
         png_chunk_free(chunk);

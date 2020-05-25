@@ -4,6 +4,13 @@
 
 Incremental support for PNG image types is being added
 
+### v0.1.2
+
+* Added support for remaining critical chunks:
+  * `PLTE` chunks can be processed through the `png_PLTE_*()` functions
+  * `IDAT` chunks can be processed through the `png_IDAT_*()` functions
+  * `IEND` chunks can be validated with the `png_IEND_valid()` function
+
 ### v0.1.1
 
 * Added extraction for other image attributes:

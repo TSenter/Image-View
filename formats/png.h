@@ -51,6 +51,15 @@ void png_close(Format_PNG);
 png_chunk_t *png_chunk_next(Format_PNG);
 void png_chunk_free(png_chunk_t *);
 
+char **png_PLTE_get(png_chunk_t *);
+int png_PLTE_length(png_chunk_t *);
+void png_PLTE_free(char **, int);
+
+void *png_IDAT_get(png_chunk_t *);
+int png_IDAT_length(png_chunk_t *);
+
+int png_IEND_valid(png_chunk_t *);
+
 int png_pHYs_ppuX(png_chunk_t *);
 int png_pHYs_ppuY(png_chunk_t *);
 char png_pHYs_unit(png_chunk_t *);

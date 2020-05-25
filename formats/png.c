@@ -167,6 +167,114 @@ void png_chunk_free(png_chunk_t *chunk) {
 }
 
 /*
+ * Fetch the palette as a two-dimensional array:
+ *      [n][0] - Red channel
+ *      [n][1] - Green channel
+ *      [n][2] - Blue channel
+ * 
+ * Returns: NULL on error
+ *          (char **) -1 if chunk length is not divisible by 3 (required by Internation Standard section 11.2.3)
+ */
+char **png_PLTE_get(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_PALETTE, PNG_CHNK_LEN) != 0) return NULL;
+
+    if (chunk->length == 0 || chunk->data == NULL) return NULL;
+    
+    int n = chunk->length % 3, i;
+
+    if (n != 0) return (char **) -1;
+    
+    n = chunk->length / 3;
+    char **palette = (char **) malloc(sizeof(char *) * n);
+
+    for (i = 0; i < n; i++) {
+        palette[i] = malloc(sizeof(char) * 3);
+        palette[i][0] = ((char *) chunk->data)[3*i];
+        palette[i][1] = ((char *) chunk->data)[3*i+1];
+        palette[i][2] = ((char *) chunk->data)[3*i+2];
+    }
+
+    return palette;
+}
+
+/*
+ * Fetch the number of entries in a palette chunk
+ * 
+ * Returns: -1 on error
+ *           0 if chunk does not conform to International Standard (section 11.2.3)
+ * 
+ */
+int png_PLTE_length(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_PALETTE, PNG_CHNK_LEN) != 0) return -1;
+
+    if (chunk->length == 0 || chunk->data == NULL) return -1;
+
+    if (chunk->length % 3 != 0) return 0;
+
+    return chunk->length / 3;
+}
+
+/*
+ * Free the memory allocated for a palette
+ * 
+ * Returns: void
+ */
+void png_PLTE_free(char **palette, int len) {
+    if (palette == NULL || palette[0] == NULL) return;
+
+    if (len <= 0) return;
+
+    while (len--) {
+        free(palette[len]);
+    }
+    free(palette);
+}
+
+/*
+ * Get the included datastream for the IDAT chunk
+ * 
+ * Returns: NULL on error
+ */
+void *png_IDAT_get(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_DATA, PNG_CHNK_LEN) != 0) return NULL;
+
+    if (chunk->length == 0 || chunk->data == NULL) return NULL;
+
+    void *data = malloc(chunk->length);
+
+    memcpy(data, chunk->data, chunk->length);
+
+    return data;
+}
+
+/*
+ * Get the length of the datastream for this IDAT chunk
+ * 
+ * Returns: -1 on error
+ */
+int png_IDAT_length(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_DATA, PNG_CHNK_LEN) != 0) return -1;
+
+    if (chunk->length == 0 || chunk->data == NULL) return -1;
+
+    return chunk->length;
+}
+
+/*
+ * Validate an IEND chunk. An IEND chunk is considered valid if it has no length and no data
+ * 
+ * Returns: 1 if chunk is invalid
+ *          0 if chunk is valid
+ */
+int png_IEND_valid(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_END, PNG_CHNK_LEN) != 0) return 1;
+
+    if (chunk->length != 0 || chunk->data != NULL) return 1;
+
+    return 0;
+}
+
+/*
  * Extract the pixels per unit along the X axis
  * 
  * Returns: -1 on error
