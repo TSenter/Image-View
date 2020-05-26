@@ -4,6 +4,12 @@
 
 Incremental support for PNG image types is being added
 
+### v0.1.3
+
+* Added command-line option for a deep scan:
+  * A normal scan (options `-s` or `--scan`) only reveal the chunks and their length
+  * A deep scan reveals information pertinent to each chunk (first 10 palette entries, textual/date information, etc.)
+
 ### v0.1.2
 
 * Added support for remaining critical chunks:

@@ -152,6 +152,8 @@ png_chunk_t *png_chunk_next(Format_PNG png) {
     }
     read += sizeof(int) * rv;
 
+    chunk->png = png;
+
     return chunk;
 }
 

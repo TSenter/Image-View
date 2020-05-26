@@ -28,7 +28,7 @@ typedef struct png_chunk {
     void *data;
     unsigned int CRC;
 
-    struct png_chunk *next;
+    struct format_png_t *png;
 } png_chunk_t;
 
 typedef struct format_png_t {

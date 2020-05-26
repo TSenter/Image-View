@@ -17,7 +17,8 @@ void usage(int exit_code) {
         "Options:\n"
         "-h, --help [command]    Get help on %s (or [command])\n"
         "-v, --version           Print version information\n"
-        "-s, --scan              Scan the chunks of each image\n",
+        "-s, --scan              View the chunks of each image\n"
+        "-d, --scan-deep         View details of the chunks of each image\n",
         USAGE_PROGRAM_NAME, USAGE_PROGRAM_NAME);
     exit(exit_code);
 }
@@ -49,40 +50,41 @@ void handle_png(Format_PNG png) {
             break;
         }
         printf("%.4s (%d)\n", chunk->type, chunk->length);
-        if (strncmp(chunk->type, PNG_CHUNK_TEXT_INT, 4) == 0) {
-            char *text = png_iTXt_keyword(chunk);
-            printf("   %s", text); free(text);
-            text = png_iTXt_text(chunk);
-            printf(": %s", text); free(text);
+        if (iv_opts.deep) {
+            if (strncmp(chunk->type, PNG_CHUNK_TEXT_INT, 4) == 0) {
+                char *text = png_iTXt_keyword(chunk);
+                printf("   %s", text); free(text);
+                text = png_iTXt_text(chunk);
+                printf(": %s", text); free(text);
 
-            text = png_iTXt_lang(chunk);
-            if (text && *text) {
-                printf(" (lang: %s)", text);
-            }
-            printf("\n");
-            free(text);
-        } else if (strncmp(chunk->type, PNG_CHUNK_TEXT, PNG_CHNK_LEN) == 0) {
-            char *text = png_tEXt_keyword(chunk);
-            printf("   %s", text); free(text);
-            text = png_tEXt_text(chunk);
-            printf(": %s\n", text); free(text);
-        } else if (strncmp(chunk->type, PNG_CHUNK_TIME, PNG_CHNK_LEN) == 0) {
-            printf("   Timestamp: %d-%02d-%02dT%02d:%02d:%02d\n",
-                   png_tIME_year(chunk),
-                   png_tIME_month(chunk),
-                   png_tIME_day(chunk),
-                   png_tIME_hour(chunk),
-                   png_tIME_minute(chunk),
-                   png_tIME_second(chunk));
-        } else if (strncmp(chunk->type, PNG_CHUNK_PALETTE, PNG_CHNK_LEN) == 0) {
-            int len = png_PLTE_length(chunk), i;
-            char **palette = png_PLTE_get(chunk);
-            printf("    Entries: %d\n", len);
-            for (i = 0; i < 10 && i < len; i++) {
-                printf("      #%d: 0x%02hhx%02hhx%02hhx\n", i, palette[i][0], palette[i][1], palette[i][2]);
-            }
-            if (i != len) printf("      ...\n");
-            png_PLTE_free(palette, len);
+                text = png_iTXt_lang(chunk);
+                if (text && *text) {
+                    printf(" (lang: %s)", text);
+                }
+                printf("\n");
+                free(text);
+            } else if (strncmp(chunk->type, PNG_CHUNK_TEXT, PNG_CHNK_LEN) == 0) {
+                char *text = png_tEXt_keyword(chunk);
+                printf("   %s", text); free(text);
+                text = png_tEXt_text(chunk);
+                printf(": %s\n", text); free(text);
+            } else if (strncmp(chunk->type, PNG_CHUNK_TIME, PNG_CHNK_LEN) == 0) {
+                printf("   Timestamp: %d-%02d-%02dT%02d:%02d:%02d\n",
+                    png_tIME_year(chunk),
+                    png_tIME_month(chunk),
+                    png_tIME_day(chunk),
+                    png_tIME_hour(chunk),
+                    png_tIME_minute(chunk),
+                    png_tIME_second(chunk));
+            } else if (strncmp(chunk->type, PNG_CHUNK_PALETTE, PNG_CHNK_LEN) == 0) {
+                int len = png_PLTE_length(chunk), i;
+                char **palette = png_PLTE_get(chunk);
+                printf("    Entries: %d\n", len);
+                for (i = 0; i < 10 && i < len; i++) {
+                    printf("      #%d: 0x%02hhx%02hhx%02hhx\n", i, palette[i][0], palette[i][1], palette[i][2]);
+                }
+                if (i != len) printf("      ...\n");
+                png_PLTE_free(palette, len);
         }
 
         png_chunk_free(chunk);
@@ -96,6 +98,7 @@ int main(int argc, char **argv) {
         { "help", optional_argument, NULL, 'h' },
         { "verbose", optional_argument, NULL, 'V' },
         { "scan", no_argument, NULL, 's' },
+        { "scan-deep", no_argument, NULL, 'd' },
         {NULL, 0, NULL, 0}, /* Last element must be all 0s */
     };
     
@@ -105,7 +108,7 @@ int main(int argc, char **argv) {
     int option_index;
     int c;
     while (1) {
-        c = getopt_long(argc, argv, "vh::V::s", options, &option_index);
+        c = getopt_long(argc, argv, "vh::V::sd", options, &option_index);
 
         if (c == -1) break;
 
@@ -125,6 +128,11 @@ int main(int argc, char **argv) {
 
             case 's':
                 iv_opts.scan = 1;
+                break;
+
+            case 'd':
+                iv_opts.scan = 1;
+                iv_opts.deep = 1;
                 break;
 
             case '?':
