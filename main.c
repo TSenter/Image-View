@@ -85,6 +85,28 @@ void handle_png(Format_PNG png) {
                 }
                 if (i != len) printf("      ...\n");
                 png_PLTE_free(palette, len);
+            } else if (strncmp(chunk->type, PNG_CHUNK_TRANSPARENCY, PNG_CHNK_LEN) == 0) {
+                int type = png_attr_col_type(png);
+
+                if (type == 0) {
+                    printf("    Grayscale sample: %hx\n", png_tRNS_gray(chunk));
+                } else if (type == 2) {
+                    short *rgb = png_tRNS_true(chunk);
+                    printf("    Truecolor sample:\n      R = %hx\n      G = %hx\n      B = %hx\n", rgb[0], rgb[1], rgb[2]);
+                    free(rgb);
+                } else if (type == 3) {
+                    int len = png_tRNS_index_length(chunk), i;
+                    char *palette = png_tRNS_index(chunk);
+                    printf("    Entries: %d\n", len);
+                    for (i = 0; i < 10 && i < len; i++) {
+                        printf("      #%d: %hhu\n", i, palette[i]);
+                    }
+                    if (i != len) printf("      ...\n");
+                    free(palette);
+                } else {
+                    printf("    [Error]: Invalid color type %d\n", type);
+                }
+            }
         }
 
         png_chunk_free(chunk);

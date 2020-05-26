@@ -277,6 +277,83 @@ int png_IEND_valid(png_chunk_t *chunk) {
 }
 
 /*
+ * Fetch transparency from tRNS chunk (color type 0 - grayscale)
+ * 
+ * Returns: -1 on error (image could be of the wrong color type)
+ */
+short png_tRNS_gray(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_TRANSPARENCY, PNG_CHNK_LEN) != 0) return -1;
+
+    if (chunk->length == 0 || chunk->data == NULL) return -1;
+
+    if (png_attr_col_type(chunk->png) != 0) return -1;
+
+    return ntohs(*((short *)chunk->data));
+}
+
+/*
+ * Fetch transparency samples from tRNS chunk (color type 2 - truecolor)
+ * 
+ * Returns: NULL on error
+ *          Array of 3 sample values (R, G, B); must be free'd
+ */
+short *png_tRNS_true(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_TRANSPARENCY, PNG_CHNK_LEN) != 0) return NULL;
+
+    if (chunk->length == 0 || chunk->data == NULL) return NULL;
+
+    if (png_attr_col_type(chunk->png) != 2) return NULL;
+
+    short *array = (short *) malloc(sizeof(short) * 3);
+    int i;
+
+    for (i = 0; i < 3; i++) {
+        array[i] = ntohs(*(((short *) chunk->data) + i));
+    }
+
+    return array;
+}
+
+/*
+ * Fetch transparency palette from tRNS chunk (color type 3 - indexed-color)
+ * 
+ * Returns: NULL on error
+ *          Array of alpha channel for palette indexes; must be free'd
+ */
+char *png_tRNS_index(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_TRANSPARENCY, PNG_CHNK_LEN) != 0) return NULL;
+
+    if (chunk->length == 0 || chunk->data == NULL) return NULL;
+
+    if (png_attr_col_type(chunk->png) != 3) return NULL;
+
+    char *palette = (char *) malloc(sizeof(char) * chunk->length);
+    int i;
+
+    for (i = 0; i < chunk->length; i++) {
+        palette[i] = ((char *)(chunk->data))[i];
+    }
+
+    return palette;
+}
+
+/*
+ * Fetch the length of the transparency palette from tRNS chunk (color type 3 - indexed-color)
+ * 
+ * Returns: -1 on error
+ *          Length of array returned by `png_tRNS_index()`
+ */
+int png_tRNS_index_length(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_TRANSPARENCY, PNG_CHNK_LEN) != 0) return -1;
+
+    if (chunk->length == 0 || chunk->data == NULL) return -1;
+
+    if (png_attr_col_type(chunk->png) != 3) return -1;
+
+    return chunk->length;
+}
+
+/*
  * Extract the pixels per unit along the X axis
  * 
  * Returns: -1 on error

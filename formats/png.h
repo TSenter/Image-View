@@ -13,6 +13,7 @@
 #define PNG_CHUNK_PALETTE         "PLTE"
 #define PNG_CHUNK_DATA            "IDAT"
 #define PNG_CHUNK_END             "IEND"
+#define PNG_CHUNK_TRANSPARENCY    "tRNS"
 #define PNG_CHUNK_PHYS            "pHYs"
 #define PNG_CHUNK_TIME            "tIME"
 #define PNG_CHUNK_TEXT_INT        "iTXt"
@@ -59,6 +60,11 @@ void *png_IDAT_get(png_chunk_t *);
 int png_IDAT_length(png_chunk_t *);
 
 int png_IEND_valid(png_chunk_t *);
+
+short png_tRNS_gray(png_chunk_t *);
+short *png_tRNS_true(png_chunk_t *);
+char *png_tRNS_index(png_chunk_t *);
+int png_tRNS_index_length(png_chunk_t *);
 
 int png_pHYs_ppuX(png_chunk_t *);
 int png_pHYs_ppuY(png_chunk_t *);

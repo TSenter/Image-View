@@ -4,6 +4,11 @@
 
 Incremental support for PNG image types is being added
 
+### v0.1.4
+
+* Added support for transparency ancillary chunks:
+  * `tRNS` chunks can be processed through the `png_tRNS_*()` functions
+
 ### v0.1.3
 
 * Added command-line option for a deep scan:
