@@ -354,6 +354,306 @@ int png_tRNS_index_length(png_chunk_t *chunk) {
 }
 
 /*
+ * Fetch the white point X from the cHRM chunk
+ * 
+ * Returns: -1 on error
+ */
+float png_cHRM_whiteX(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_CHROMACITY, PNG_CHNK_LEN) != 0) return -1;
+
+    if (chunk->length == 0 || chunk->data == NULL) return -1;
+
+    int whiteX = *((int *) chunk->data);
+    whiteX = ntohl(whiteX);
+
+    return whiteX / PNG_RATIO;
+}
+
+/*
+ * Fetch the white point Y from the cHRM chunk
+ * 
+ * Returns: -1 on error
+ */
+float png_cHRM_whiteY(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_CHROMACITY, PNG_CHNK_LEN) != 0) return -1;
+
+    if (chunk->length == 0 || chunk->data == NULL) return -1;
+
+    int whiteY = *(((int *)chunk->data)+1);
+    whiteY = ntohl(whiteY);
+
+    return whiteY / PNG_RATIO;
+}
+
+/*
+ * Fetch the red point X from the cHRM chunk
+ * 
+ * Returns: -1 on error
+ */
+float png_cHRM_redX(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_CHROMACITY, PNG_CHNK_LEN) != 0) return -1;
+
+    if (chunk->length == 0 || chunk->data == NULL) return -1;
+
+    int redX = *(((int *)chunk->data)+2);
+    redX = ntohl(redX);
+
+    return redX / PNG_RATIO;
+}
+
+/*
+ * Fetch the red point Y from the cHRM chunk
+ * 
+ * Returns: -1 on error
+ */
+float png_cHRM_redY(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_CHROMACITY, PNG_CHNK_LEN) != 0) return -1;
+
+    if (chunk->length == 0 || chunk->data == NULL) return -1;
+
+    int redY = *(((int *)chunk->data)+3);
+    redY = ntohl(redY);
+
+    return redY / PNG_RATIO;
+}
+
+/*
+ * Fetch the green point X from the cHRM chunk
+ * 
+ * Returns: -1 on error
+ */
+float png_cHRM_greenX(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_CHROMACITY, PNG_CHNK_LEN) != 0) return -1;
+
+    if (chunk->length == 0 || chunk->data == NULL) return -1;
+
+    int greenX = *(((int *)chunk->data)+4);
+    greenX = ntohl(greenX);
+
+    return greenX / PNG_RATIO;
+}
+
+/*
+ * Fetch the green point Y from the cHRM chunk
+ * 
+ * Returns: -1 on error
+ */
+float png_cHRM_greenY(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_CHROMACITY, PNG_CHNK_LEN) != 0) return -1;
+
+    if (chunk->length == 0 || chunk->data == NULL) return -1;
+
+    int greenY = *(((int *)chunk->data)+5);
+    greenY = ntohl(greenY);
+
+    return greenY / PNG_RATIO;
+}
+
+/*
+ * Fetch the blue point X from the cHRM chunk
+ * 
+ * Returns: -1 on error
+ */
+float png_cHRM_blueX(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_CHROMACITY, PNG_CHNK_LEN) != 0) return -1;
+
+    if (chunk->length == 0 || chunk->data == NULL) return -1;
+
+    int blueX = *(((int *)chunk->data)+6);
+    blueX = ntohl(blueX);
+
+    return blueX / PNG_RATIO;
+}
+
+/*
+ * Fetch the blue point Y from the cHRM chunk
+ * 
+ * Returns: -1 on error
+ */
+float png_cHRM_blueY(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_CHROMACITY, PNG_CHNK_LEN) != 0) return -1;
+
+    if (chunk->length == 0 || chunk->data == NULL) return -1;
+
+    int blueY = *(((int *)chunk->data)+7);
+    blueY = ntohl(blueY);
+
+    return blueY / PNG_RATIO;
+}
+
+/*
+ * Calculate the image gamma from the gAMA chunk
+ * 
+ * Returns: -1 on error
+ */
+float png_gAMA(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_GAMMA, PNG_CHNK_LEN) != 0) return -1;
+
+    if (chunk->length == 0 || chunk->data == NULL) return -1;
+
+    int gamma = *((int *)chunk->data);
+    gamma = ntohl(gamma);
+
+    return gamma / PNG_RATIO;
+}
+
+/*
+ * Fetch the raw image gamma from the gAMA chunk (gamma times 100000)
+ * 
+ * Returns: -1 on error
+ */
+int png_gAMA_raw(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_GAMMA, PNG_CHNK_LEN) != 0) return -1;
+
+    if (chunk->length == 0 || chunk->data == NULL) return -1;
+
+    int gamma = *((int *)chunk->data);
+    gamma = ntohl(gamma);
+
+    return gamma;
+}
+
+/*
+ * Fetch the name of the embedded ICC (International Color Consortium) profile
+ * 
+ * Returns: NULL on error
+ *          Profile name on success; must be free'd
+ */
+char *png_iCCP_name(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_ICCP, PNG_CHNK_LEN) != 0) return NULL;
+
+    if (chunk->length == 0 || chunk->data == NULL) return NULL;
+
+    return strdup((char *)chunk->data);
+}
+
+/*
+ * Fetch the compression method of the embedded ICC (International Color Consortium) profile
+ * 
+ * Returns: -1 on error
+ */
+char png_iCCP_method(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_ICCP, PNG_CHNK_LEN) != 0) return -1;
+
+    if (chunk->length == 0 || chunk->data == NULL) return -1;
+
+    int offset = strlen(chunk->data) + 1;
+
+    return *((char *)chunk->data+offset);
+}
+
+/*
+ * Fetch the compressed embedded ICC (International Color Consortium) profile
+ * 
+ * Returns: NULL on error
+ *          Datastream containing profile; must be free'd
+ */
+void *png_iCCP_profile(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_ICCP, PNG_CHNK_LEN) != 0) return NULL;
+
+    if (chunk->length == 0 || chunk->data == NULL) return NULL;
+
+    int offset = strlen(chunk->data) + 2;
+    int size = chunk->length - offset;
+    void *profile = malloc(size);
+
+    memcpy(profile, chunk->data + offset, size);
+
+    return profile;
+}
+
+/*
+ * Fetch the length of the compressed embedded ICC (International Color Consortium) profile
+ * 
+ * Returns: -1 on error
+ */
+int png_iCCP_profile_len(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_ICCP, PNG_CHNK_LEN) != 0) return -1;
+
+    if (chunk->length == 0 || chunk->data == NULL) return -1;
+
+    return chunk->length - (strlen(chunk->data) + 2);
+}
+
+/*
+ * Fetch the significant bits from the sBIT chunk
+ * 
+ * Returns: NULL on error
+ */
+char *png_sBIT_get(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_SIGBITS, PNG_CHNK_LEN) != 0) return NULL;
+
+    if (chunk->length == 0 || chunk->data == NULL) return NULL;
+
+    char *bits;
+    int len;
+
+    switch (png_attr_col_type(chunk->png)) {
+        case 0:
+            len = 1;
+            break;
+        case 2:
+        case 3:
+            len = 3;
+            break;
+        case 4:
+            len = 2;
+            break;
+        case 6:
+            len = 4;
+            break;
+        default:
+            len = -1;
+    }
+
+    if (len == -1) return NULL;
+
+    bits = (char *) malloc(len);
+
+    memcpy(bits, chunk->data, len);
+
+    return bits;
+}
+
+/*
+ * Fetch the length of the significant bits array from the sBIT chunk
+ * 
+ * Returns: -1 on error
+ */
+int png_sBIT_len(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_SIGBITS, PNG_CHNK_LEN) != 0) return -1;
+
+    if (chunk->length == 0 || chunk->data == NULL) return -1;
+
+    switch (png_attr_col_type(chunk->png)) {
+        case 0:
+            return 1;
+        case 2:
+        case 3:
+            return 3;
+        case 4:
+            return 2;
+        case 6:
+            return 4;
+        default:
+            return -1;
+    }
+}
+
+/*
+ * Fetch the rendering intent from the sRGB chunk
+ * 
+ * Returns: -1 on error
+ */
+char png_sRGB_get(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_SRGB, PNG_CHNK_LEN) != 0) return -1;
+
+    if (chunk->length == 0 || chunk->data == NULL) return -1;
+
+    return *((char *)chunk->data);
+}
+
+/*
  * Extract the pixels per unit along the X axis
  * 
  * Returns: -1 on error

@@ -106,6 +106,70 @@ void handle_png(Format_PNG png) {
                 } else {
                     printf("    [Error]: Invalid color type %d\n", type);
                 }
+            } else if (strncmp(chunk->type, PNG_CHUNK_CHROMACITY, PNG_CHNK_LEN) == 0) {
+                printf("    Chromacities:\n");
+                printf("      White point (x): %.5f\n"
+                       "      White point (y): %.5f\n"
+                       "      Red (x):         %.5f\n"
+                       "      Red (y):         %.5f\n"
+                       "      Green (x):       %.5f\n"
+                       "      Green (y):       %.5f\n"
+                       "      Blue (x):        %.5f\n"
+                       "      Blue (y):        %.5f\n",
+                       png_cHRM_whiteX(chunk),
+                       png_cHRM_whiteX(chunk),
+                       png_cHRM_redX(chunk),
+                       png_cHRM_redY(chunk),
+                       png_cHRM_greenX(chunk),
+                       png_cHRM_greenY(chunk),
+                       png_cHRM_blueX(chunk),
+                       png_cHRM_blueY(chunk));
+            } else if (strncmp(chunk->type, PNG_CHUNK_GAMMA, PNG_CHNK_LEN) == 0) {
+                printf("    Gamma: %.5f (0x%08x)\n", png_gAMA(chunk), png_gAMA_raw(chunk));
+            } else if (strncmp(chunk->type, PNG_CHUNK_ICCP, PNG_CHNK_LEN) == 0) {
+                char *profile = png_iCCP_name(chunk);
+                
+                printf("    Profile: '%s' (%d bytes, %s compression)\n", profile, png_iCCP_profile_len(chunk), png_iCCP_method(chunk) ? "unknown" : "zlib");
+
+                free(profile);
+            } else if (strncmp(chunk->type, PNG_CHUNK_SIGBITS, PNG_CHNK_LEN) == 0) {
+                int type = png_attr_col_type(png);
+                char *bits = png_sBIT_get(chunk);
+
+                if (type == 0 || type == 4) {
+                    printf("    Grayscale: 0x%hhx\n", bits[0]);
+                } else if (type == 2 || type == 3 || type == 6) {
+                    printf("    Red:       0x%hhx\n"
+                           "    Green:     0x%hhx\n"
+                           "    Blue:      0x%hhx\n",
+                           bits[0], bits[1], bits[2]);
+                }
+                if (type == 4 || type == 6) {
+                    printf("    Alpha:     0x%hhx\n", bits[type == 4 ? 2 : 3]);
+                }
+
+                free(bits);
+            } else if (strncmp(chunk->type, PNG_CHUNK_SRGB, PNG_CHNK_LEN) == 0) {
+                char intent = png_sRGB_get(chunk);
+                char *s = "error";
+
+                switch (intent) {
+                    case 0:
+                        s = "perceptual";
+                        break;
+                    case 1:
+                        s = "relative colorimetric";
+                        break;
+                    case 2:
+                        s = "saturation";
+                        break;
+                    case 3:
+                        s = "absolute colorimetric";
+                        break;
+                }
+
+                printf("    Rendering intent: %s\n", s);
+
             }
         }
 

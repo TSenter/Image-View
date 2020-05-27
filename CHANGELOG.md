@@ -4,6 +4,15 @@
 
 Incremental support for PNG image types is being added
 
+### v0.1.5
+
+* Added support for color space information chunks:
+  * `cHRM` chunks can be processed through the `png_cHRM_*()` functions
+  * `gAMA` chunks can be processed through the `png_gAMA*()` functions
+  * `iCCP` chunks can be processed through the `png_iCCP_*()` functions
+  * `sBIT` chunks can be processed through the `png_sBIT_*()` functions
+  * `sRGB` chunks can be processed through the `png_sRGB_get()` function
+
 ### v0.1.4
 
 * Added support for transparency ancillary chunks:

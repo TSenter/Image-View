@@ -8,12 +8,18 @@
 #define PNG_CHNK_LEN 4
 #define PNG_CHNK_TYPE_SZ 4
 #define PNG_CHNK_IHDR 0x52444849
+#define PNG_RATIO 100000.0F
 
 #define PNG_CHUNK_HEADER          "IHDR"
 #define PNG_CHUNK_PALETTE         "PLTE"
 #define PNG_CHUNK_DATA            "IDAT"
 #define PNG_CHUNK_END             "IEND"
 #define PNG_CHUNK_TRANSPARENCY    "tRNS"
+#define PNG_CHUNK_CHROMACITY      "cHRM"
+#define PNG_CHUNK_GAMMA           "gAMA"
+#define PNG_CHUNK_ICCP            "iCCP"
+#define PNG_CHUNK_SIGBITS         "sBIT"
+#define PNG_CHUNK_SRGB            "sRGB"
 #define PNG_CHUNK_PHYS            "pHYs"
 #define PNG_CHUNK_TIME            "tIME"
 #define PNG_CHUNK_TEXT_INT        "iTXt"
@@ -65,6 +71,28 @@ short png_tRNS_gray(png_chunk_t *);
 short *png_tRNS_true(png_chunk_t *);
 char *png_tRNS_index(png_chunk_t *);
 int png_tRNS_index_length(png_chunk_t *);
+
+float png_cHRM_whiteX(png_chunk_t *);
+float png_cHRM_whiteY(png_chunk_t *);
+float png_cHRM_redX(png_chunk_t *);
+float png_cHRM_redY(png_chunk_t *);
+float png_cHRM_greenX(png_chunk_t *);
+float png_cHRM_greenY(png_chunk_t *);
+float png_cHRM_blueX(png_chunk_t *);
+float png_cHRM_blueY(png_chunk_t *);
+
+float png_gAMA(png_chunk_t *);
+int png_gAMA_raw(png_chunk_t *);
+
+char *png_iCCP_name(png_chunk_t *);
+char png_iCCP_method(png_chunk_t *);
+void *png_iCCP_profile(png_chunk_t *);
+int png_iCCP_profile_len(png_chunk_t *);
+
+char *png_sBIT_get(png_chunk_t *);
+int png_sBIT_len(png_chunk_t *);
+
+char png_sRGB_get(png_chunk_t *);
 
 int png_pHYs_ppuX(png_chunk_t *);
 int png_pHYs_ppuY(png_chunk_t *);
