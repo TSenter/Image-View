@@ -53,7 +53,7 @@ void handle_png(Format_PNG png) {
         if (iv_opts.deep) {
             if (strncmp(chunk->type, PNG_CHUNK_TEXT_INT, 4) == 0) {
                 char *text = png_iTXt_keyword(chunk);
-                printf("   %s", text); free(text);
+                printf("    %s", text); free(text);
                 text = png_iTXt_text(chunk);
                 printf(": %s", text); free(text);
 
@@ -65,7 +65,7 @@ void handle_png(Format_PNG png) {
                 free(text);
             } else if (strncmp(chunk->type, PNG_CHUNK_TEXT, PNG_CHNK_LEN) == 0) {
                 char *text = png_tEXt_keyword(chunk);
-                printf("   %s", text); free(text);
+                printf("    %s", text); free(text);
                 text = png_tEXt_text(chunk);
                 printf(": %s\n", text); free(text);
             } else if (strncmp(chunk->type, PNG_CHUNK_TIME, PNG_CHNK_LEN) == 0) {
