@@ -20,11 +20,11 @@
 #define PNG_CHUNK_ICCP            "iCCP"
 #define PNG_CHUNK_SIGBITS         "sBIT"
 #define PNG_CHUNK_SRGB            "sRGB"
-#define PNG_CHUNK_PHYS            "pHYs"
-#define PNG_CHUNK_TIME            "tIME"
 #define PNG_CHUNK_TEXT_INT        "iTXt"
 #define PNG_CHUNK_TEXT            "tEXt"
 #define PNG_CHUNK_TEXT_COMPRESSED "zTXt"
+#define PNG_CHUNK_PHYS            "pHYs"
+#define PNG_CHUNK_TIME            "tIME"
 
 #define PNG_ISCRITICAL(chunk)  (chunk->type[0] & 0x20 != 0)
 #define PNG_ISANCILLARY(chunk) (chunk->type[0] & 0x20 == 0)
@@ -94,9 +94,9 @@ int png_sBIT_len(png_chunk_t *);
 
 char png_sRGB_get(png_chunk_t *);
 
-int png_pHYs_ppuX(png_chunk_t *);
-int png_pHYs_ppuY(png_chunk_t *);
-char png_pHYs_unit(png_chunk_t *);
+char *png_iTXt_keyword(png_chunk_t *);
+char *png_iTXt_lang(png_chunk_t *);
+char *png_iTXt_text(png_chunk_t *);
 
 char *png_tEXt_keyword(png_chunk_t *);
 char *png_tEXt_text(png_chunk_t *);
@@ -106,9 +106,9 @@ char png_zTXt_method(png_chunk_t *);
 void *png_zTXt_data(png_chunk_t *);
 int png_zTXt_length(png_chunk_t *);
 
-char *png_iTXt_keyword(png_chunk_t *);
-char *png_iTXt_lang(png_chunk_t *);
-char *png_iTXt_text(png_chunk_t *);
+int png_pHYs_ppuX(png_chunk_t *);
+int png_pHYs_ppuY(png_chunk_t *);
+char png_pHYs_unit(png_chunk_t *);
 
 short png_tIME_year(png_chunk_t *);
 char png_tIME_month(png_chunk_t *);

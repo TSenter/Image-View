@@ -4,6 +4,10 @@
 
 Incremental support for PNG image types is being added
 
+### v0.1.5a
+
+* Refactor functions to more accurately represent chunk order, as defined in the International Standard
+
 ### v0.1.5
 
 * Added support for color space information chunks:

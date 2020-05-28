@@ -654,46 +654,59 @@ char png_sRGB_get(png_chunk_t *chunk) {
 }
 
 /*
- * Extract the pixels per unit along the X axis
+ * Extract the keyword from an iTXt chunk
  * 
- * Returns: -1 on error
- *          pixels per unit on success
+ * Returns: NULL on error
+ *          keyword on success
  */
-int png_pHYs_ppuX(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_PHYS, PNG_CHNK_LEN) != 0) return -1;
+char *png_iTXt_keyword(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_TEXT_INT, PNG_CHNK_LEN) != 0) return NULL;
 
-    if (chunk->length < 4) return -1;
-
-    return ntohl(*((int *)chunk->data));
+    return strdup((char *) chunk->data);
 }
 
 /*
- * Extract the pixels per unit along the Y axis
+ * Extract the language tag from an iTXt chunk
  * 
- * Returns: -1 on error
- *          pixels per unit on success
+ * Returns: NULL on error
+ *          Empty string if no language tag available; must be free'd
+ *          string containing ISO 646 hyphen-separated words; must be free'd
  */
-int png_pHYs_ppuY(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_PHYS, PNG_CHNK_LEN) != 0) return -1;
+char *png_iTXt_lang(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_TEXT_INT, PNG_CHNK_LEN) != 0) return NULL;
 
-    if (chunk->length < 8) return -1;
+    if (chunk->length <= strlen(chunk->data) + 3) return NULL;
 
-    return ntohl(*((int *)(chunk->data + 4)));
+    return strdup(chunk->data + strlen(chunk->data) + 3);
 }
 
 /*
- * Extract the unit for pixels per unit
+ * Extract the text value from an iTXt chunk
  * 
- * Returns: -1 on error
- *           0 for unknown unit
- *           1 for meter
+ * Returns: NULL on error
+ *          string containing text from an iTXt chunk on success; must be free'd
  */
-char png_pHYs_unit(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_PHYS, PNG_CHNK_LEN) != 0) return -1;
+char *png_iTXt_text(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_TEXT_INT, PNG_CHNK_LEN) != 0) return NULL;
 
-    if (chunk->length < 9) return -1;
+    int c = strlen(chunk->data) + 3; /* Keyword + comp. flag + comp. method */
+    char *p = chunk->data + c;
+    char *buf;
 
-    return *((char *) chunk->data + 9);
+    c += strlen(p) + 1; /* Language tag */
+    p = chunk->data + c;
+
+    c += strlen(p) + 1; /* Translated keyword */
+    p = chunk->data + c;
+    
+    c = chunk->length - c;
+
+    buf = (char *) malloc(sizeof(char) * (c + 1));
+
+    strncpy(buf, p, c);
+    buf[c] = 0;
+
+    return buf;
 }
 
 /*
@@ -787,59 +800,46 @@ int png_zTXt_length(png_chunk_t *chunk) {
 }
 
 /*
- * Extract the keyword from an iTXt chunk
+ * Extract the pixels per unit along the X axis
  * 
- * Returns: NULL on error
- *          keyword on success
+ * Returns: -1 on error
+ *          pixels per unit on success
  */
-char *png_iTXt_keyword(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_TEXT_INT, PNG_CHNK_LEN) != 0) return NULL;
+int png_pHYs_ppuX(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_PHYS, PNG_CHNK_LEN) != 0) return -1;
 
-    return strdup((char *) chunk->data);
+    if (chunk->length < 4) return -1;
+
+    return ntohl(*((int *)chunk->data));
 }
 
 /*
- * Extract the language tag from an iTXt chunk
+ * Extract the pixels per unit along the Y axis
  * 
- * Returns: NULL on error
- *          Empty string if no language tag available; must be free'd
- *          string containing ISO 646 hyphen-separated words; must be free'd
+ * Returns: -1 on error
+ *          pixels per unit on success
  */
-char *png_iTXt_lang(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_TEXT_INT, PNG_CHNK_LEN) != 0) return NULL;
+int png_pHYs_ppuY(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_PHYS, PNG_CHNK_LEN) != 0) return -1;
 
-    if (chunk->length <= strlen(chunk->data) + 3) return NULL;
+    if (chunk->length < 8) return -1;
 
-    return strdup(chunk->data + strlen(chunk->data) + 3);
+    return ntohl(*((int *)(chunk->data + 4)));
 }
 
 /*
- * Extract the text value from an iTXt chunk
+ * Extract the unit for pixels per unit
  * 
- * Returns: NULL on error
- *          string containing text from an iTXt chunk on success; must be free'd
+ * Returns: -1 on error
+ *           0 for unknown unit
+ *           1 for meter
  */
-char *png_iTXt_text(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_TEXT_INT, PNG_CHNK_LEN) != 0) return NULL;
+char png_pHYs_unit(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_PHYS, PNG_CHNK_LEN) != 0) return -1;
 
-    int c = strlen(chunk->data) + 3; /* Keyword + comp. flag + comp. method */
-    char *p = chunk->data + c;
-    char *buf;
+    if (chunk->length < 9) return -1;
 
-    c += strlen(p) + 1; /* Language tag */
-    p = chunk->data + c;
-
-    c += strlen(p) + 1; /* Translated keyword */
-    p = chunk->data + c;
-    
-    c = chunk->length - c;
-
-    buf = (char *) malloc(sizeof(char) * (c + 1));
-
-    strncpy(buf, p, c);
-    buf[c] = 0;
-
-    return buf;
+    return *((char *) chunk->data + 9);
 }
 
 /*
