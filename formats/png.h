@@ -30,6 +30,8 @@
 
 #define PNG_ISCRITICAL(chunk)  (chunk->type[0] & 0x20 != 0)
 #define PNG_ISANCILLARY(chunk) (chunk->type[0] & 0x20 == 0)
+#define PNG_VALIDATE(chunkType, defaultReturn) if (strncmp(chunk->type, chunkType, PNG_CHNK_LEN) != 0) return defaultReturn;\
+                                            if (chunk->length == 0 || chunk->data == NULL) return defaultReturn;
 
 typedef unsigned char byte;
 typedef unsigned short ushort;

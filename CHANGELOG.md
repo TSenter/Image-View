@@ -4,6 +4,11 @@
 
 Incremental support for PNG image types is being added
 
+### v0.1.7
+
+* Extract chunk validation to macro
+  * Instead of validating the chunk type (and data) manually, the `PNG_VALIDATE(chunkType, defaultReturn)` macro should be used
+
 ### v0.1.6
 
 * Added support for remaining miscellaneous chunk types

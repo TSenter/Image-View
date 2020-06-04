@@ -178,9 +178,7 @@ void png_chunk_free(png_chunk_t *chunk) {
  *          (char **) -1 if chunk length is not divisible by 3 (required by Internation Standard section 11.2.3)
  */
 char **png_PLTE_get(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_PALETTE, PNG_CHNK_LEN) != 0) return NULL;
-
-    if (chunk->length == 0 || chunk->data == NULL) return NULL;
+    PNG_VALIDATE(PNG_CHUNK_PALETTE, NULL);
     
     int n = chunk->length % 3, i;
 
@@ -207,9 +205,7 @@ char **png_PLTE_get(png_chunk_t *chunk) {
  * 
  */
 int png_PLTE_length(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_PALETTE, PNG_CHNK_LEN) != 0) return -1;
-
-    if (chunk->length == 0 || chunk->data == NULL) return -1;
+    PNG_VALIDATE(PNG_CHUNK_PALETTE, -1);
 
     if (chunk->length % 3 != 0) return 0;
 
@@ -238,9 +234,7 @@ void png_PLTE_free(char **palette, int len) {
  * Returns: NULL on error
  */
 void *png_IDAT_get(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_DATA, PNG_CHNK_LEN) != 0) return NULL;
-
-    if (chunk->length == 0 || chunk->data == NULL) return NULL;
+    PNG_VALIDATE(PNG_CHUNK_DATA, NULL);
 
     void *data = malloc(chunk->length);
 
@@ -255,9 +249,7 @@ void *png_IDAT_get(png_chunk_t *chunk) {
  * Returns: -1 on error
  */
 int png_IDAT_length(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_DATA, PNG_CHNK_LEN) != 0) return -1;
-
-    if (chunk->length == 0 || chunk->data == NULL) return -1;
+    PNG_VALIDATE(PNG_CHUNK_DATA, -1);
 
     return chunk->length;
 }
@@ -282,9 +274,7 @@ int png_IEND_valid(png_chunk_t *chunk) {
  * Returns: -1 on error (image could be of the wrong color type)
  */
 short png_tRNS_gray(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_TRANSPARENCY, PNG_CHNK_LEN) != 0) return -1;
-
-    if (chunk->length == 0 || chunk->data == NULL) return -1;
+    PNG_VALIDATE(PNG_CHUNK_TRANSPARENCY, -1);
 
     if (png_attr_col_type(chunk->png) != 0) return -1;
 
@@ -298,9 +288,7 @@ short png_tRNS_gray(png_chunk_t *chunk) {
  *          Array of 3 sample values (R, G, B); must be free'd
  */
 short *png_tRNS_true(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_TRANSPARENCY, PNG_CHNK_LEN) != 0) return NULL;
-
-    if (chunk->length == 0 || chunk->data == NULL) return NULL;
+    PNG_VALIDATE(PNG_CHUNK_TRANSPARENCY, NULL);
 
     if (png_attr_col_type(chunk->png) != 2) return NULL;
 
@@ -321,9 +309,7 @@ short *png_tRNS_true(png_chunk_t *chunk) {
  *          Array of alpha channel for palette indexes; must be free'd
  */
 char *png_tRNS_index(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_TRANSPARENCY, PNG_CHNK_LEN) != 0) return NULL;
-
-    if (chunk->length == 0 || chunk->data == NULL) return NULL;
+    PNG_VALIDATE(PNG_CHUNK_TRANSPARENCY, NULL);
 
     if (png_attr_col_type(chunk->png) != 3) return NULL;
 
@@ -344,9 +330,7 @@ char *png_tRNS_index(png_chunk_t *chunk) {
  *          Length of array returned by `png_tRNS_index()`
  */
 int png_tRNS_index_length(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_TRANSPARENCY, PNG_CHNK_LEN) != 0) return -1;
-
-    if (chunk->length == 0 || chunk->data == NULL) return -1;
+    PNG_VALIDATE(PNG_CHUNK_TRANSPARENCY, -1);
 
     if (png_attr_col_type(chunk->png) != 3) return -1;
 
@@ -359,9 +343,7 @@ int png_tRNS_index_length(png_chunk_t *chunk) {
  * Returns: -1 on error
  */
 float png_cHRM_whiteX(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_CHROMACITY, PNG_CHNK_LEN) != 0) return -1;
-
-    if (chunk->length == 0 || chunk->data == NULL) return -1;
+    PNG_VALIDATE(PNG_CHUNK_CHROMACITY, -1);
 
     int whiteX = *((int *) chunk->data);
     whiteX = ntohl(whiteX);
@@ -375,9 +357,7 @@ float png_cHRM_whiteX(png_chunk_t *chunk) {
  * Returns: -1 on error
  */
 float png_cHRM_whiteY(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_CHROMACITY, PNG_CHNK_LEN) != 0) return -1;
-
-    if (chunk->length == 0 || chunk->data == NULL) return -1;
+    PNG_VALIDATE(PNG_CHUNK_CHROMACITY, -1);
 
     int whiteY = *(((int *)chunk->data)+1);
     whiteY = ntohl(whiteY);
@@ -391,9 +371,7 @@ float png_cHRM_whiteY(png_chunk_t *chunk) {
  * Returns: -1 on error
  */
 float png_cHRM_redX(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_CHROMACITY, PNG_CHNK_LEN) != 0) return -1;
-
-    if (chunk->length == 0 || chunk->data == NULL) return -1;
+    PNG_VALIDATE(PNG_CHUNK_CHROMACITY, -1);
 
     int redX = *(((int *)chunk->data)+2);
     redX = ntohl(redX);
@@ -407,9 +385,7 @@ float png_cHRM_redX(png_chunk_t *chunk) {
  * Returns: -1 on error
  */
 float png_cHRM_redY(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_CHROMACITY, PNG_CHNK_LEN) != 0) return -1;
-
-    if (chunk->length == 0 || chunk->data == NULL) return -1;
+    PNG_VALIDATE(PNG_CHUNK_CHROMACITY, -1);
 
     int redY = *(((int *)chunk->data)+3);
     redY = ntohl(redY);
@@ -423,9 +399,7 @@ float png_cHRM_redY(png_chunk_t *chunk) {
  * Returns: -1 on error
  */
 float png_cHRM_greenX(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_CHROMACITY, PNG_CHNK_LEN) != 0) return -1;
-
-    if (chunk->length == 0 || chunk->data == NULL) return -1;
+    PNG_VALIDATE(PNG_CHUNK_CHROMACITY, -1);
 
     int greenX = *(((int *)chunk->data)+4);
     greenX = ntohl(greenX);
@@ -439,9 +413,7 @@ float png_cHRM_greenX(png_chunk_t *chunk) {
  * Returns: -1 on error
  */
 float png_cHRM_greenY(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_CHROMACITY, PNG_CHNK_LEN) != 0) return -1;
-
-    if (chunk->length == 0 || chunk->data == NULL) return -1;
+    PNG_VALIDATE(PNG_CHUNK_CHROMACITY, -1);
 
     int greenY = *(((int *)chunk->data)+5);
     greenY = ntohl(greenY);
@@ -455,9 +427,7 @@ float png_cHRM_greenY(png_chunk_t *chunk) {
  * Returns: -1 on error
  */
 float png_cHRM_blueX(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_CHROMACITY, PNG_CHNK_LEN) != 0) return -1;
-
-    if (chunk->length == 0 || chunk->data == NULL) return -1;
+    PNG_VALIDATE(PNG_CHUNK_CHROMACITY, -1);
 
     int blueX = *(((int *)chunk->data)+6);
     blueX = ntohl(blueX);
@@ -471,9 +441,7 @@ float png_cHRM_blueX(png_chunk_t *chunk) {
  * Returns: -1 on error
  */
 float png_cHRM_blueY(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_CHROMACITY, PNG_CHNK_LEN) != 0) return -1;
-
-    if (chunk->length == 0 || chunk->data == NULL) return -1;
+    PNG_VALIDATE(PNG_CHUNK_CHROMACITY, -1);
 
     int blueY = *(((int *)chunk->data)+7);
     blueY = ntohl(blueY);
@@ -487,9 +455,7 @@ float png_cHRM_blueY(png_chunk_t *chunk) {
  * Returns: -1 on error
  */
 float png_gAMA(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_GAMMA, PNG_CHNK_LEN) != 0) return -1;
-
-    if (chunk->length == 0 || chunk->data == NULL) return -1;
+    PNG_VALIDATE(PNG_CHUNK_GAMMA, -1);
 
     int gamma = *((int *)chunk->data);
     gamma = ntohl(gamma);
@@ -503,9 +469,7 @@ float png_gAMA(png_chunk_t *chunk) {
  * Returns: -1 on error
  */
 int png_gAMA_raw(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_GAMMA, PNG_CHNK_LEN) != 0) return -1;
-
-    if (chunk->length == 0 || chunk->data == NULL) return -1;
+    PNG_VALIDATE(PNG_CHUNK_GAMMA, -1);
 
     int gamma = *((int *)chunk->data);
     gamma = ntohl(gamma);
@@ -520,9 +484,7 @@ int png_gAMA_raw(png_chunk_t *chunk) {
  *          Profile name on success; must be free'd
  */
 char *png_iCCP_name(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_ICCP, PNG_CHNK_LEN) != 0) return NULL;
-
-    if (chunk->length == 0 || chunk->data == NULL) return NULL;
+    PNG_VALIDATE(PNG_CHUNK_ICCP, NULL);
 
     return strdup((char *)chunk->data);
 }
@@ -533,9 +495,7 @@ char *png_iCCP_name(png_chunk_t *chunk) {
  * Returns: -1 on error
  */
 char png_iCCP_method(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_ICCP, PNG_CHNK_LEN) != 0) return -1;
-
-    if (chunk->length == 0 || chunk->data == NULL) return -1;
+    PNG_VALIDATE(PNG_CHUNK_ICCP, -1);
 
     int offset = strlen(chunk->data) + 1;
 
@@ -549,9 +509,7 @@ char png_iCCP_method(png_chunk_t *chunk) {
  *          Datastream containing profile; must be free'd
  */
 void *png_iCCP_profile(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_ICCP, PNG_CHNK_LEN) != 0) return NULL;
-
-    if (chunk->length == 0 || chunk->data == NULL) return NULL;
+    PNG_VALIDATE(PNG_CHUNK_ICCP, NULL);
 
     int offset = strlen(chunk->data) + 2;
     int size = chunk->length - offset;
@@ -568,9 +526,7 @@ void *png_iCCP_profile(png_chunk_t *chunk) {
  * Returns: -1 on error
  */
 int png_iCCP_profile_len(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_ICCP, PNG_CHNK_LEN) != 0) return -1;
-
-    if (chunk->length == 0 || chunk->data == NULL) return -1;
+    PNG_VALIDATE(PNG_CHUNK_ICCP, -1);
 
     return chunk->length - (strlen(chunk->data) + 2);
 }
@@ -581,9 +537,7 @@ int png_iCCP_profile_len(png_chunk_t *chunk) {
  * Returns: NULL on error
  */
 char *png_sBIT_get(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_SIGBITS, PNG_CHNK_LEN) != 0) return NULL;
-
-    if (chunk->length == 0 || chunk->data == NULL) return NULL;
+    PNG_VALIDATE(PNG_CHUNK_SIGBITS, NULL);
 
     char *bits;
     int len;
@@ -621,9 +575,7 @@ char *png_sBIT_get(png_chunk_t *chunk) {
  * Returns: -1 on error
  */
 int png_sBIT_len(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_SIGBITS, PNG_CHNK_LEN) != 0) return -1;
-
-    if (chunk->length == 0 || chunk->data == NULL) return -1;
+    PNG_VALIDATE(PNG_CHUNK_SIGBITS, -1);
 
     switch (png_attr_col_type(chunk->png)) {
         case 0:
@@ -646,9 +598,7 @@ int png_sBIT_len(png_chunk_t *chunk) {
  * Returns: -1 on error
  */
 char png_sRGB_get(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_SRGB, PNG_CHNK_LEN) != 0) return -1;
-
-    if (chunk->length == 0 || chunk->data == NULL) return -1;
+    PNG_VALIDATE(PNG_CHUNK_SRGB, -1);
 
     return *((char *)chunk->data);
 }
@@ -660,7 +610,7 @@ char png_sRGB_get(png_chunk_t *chunk) {
  *          keyword on success
  */
 char *png_iTXt_keyword(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_TEXT_INT, PNG_CHNK_LEN) != 0) return NULL;
+    PNG_VALIDATE(PNG_CHUNK_TEXT_INT, NULL);
 
     return strdup((char *) chunk->data);
 }
@@ -673,9 +623,7 @@ char *png_iTXt_keyword(png_chunk_t *chunk) {
  *          string containing ISO 646 hyphen-separated words; must be free'd
  */
 char *png_iTXt_lang(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_TEXT_INT, PNG_CHNK_LEN) != 0) return NULL;
-
-    if (chunk->length <= strlen(chunk->data) + 3) return NULL;
+    PNG_VALIDATE(PNG_CHUNK_TEXT_INT, NULL);
 
     return strdup(chunk->data + strlen(chunk->data) + 3);
 }
@@ -687,7 +635,7 @@ char *png_iTXt_lang(png_chunk_t *chunk) {
  *          string containing text from an iTXt chunk on success; must be free'd
  */
 char *png_iTXt_text(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_TEXT_INT, PNG_CHNK_LEN) != 0) return NULL;
+    PNG_VALIDATE(PNG_CHUNK_TEXT_INT, NULL);
 
     int c = strlen(chunk->data) + 3; /* Keyword + comp. flag + comp. method */
     char *p = chunk->data + c;
@@ -716,7 +664,7 @@ char *png_iTXt_text(png_chunk_t *chunk) {
  *          keyword on success; must be free'd
  */
 char *png_tEXt_keyword(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_TEXT, PNG_CHNK_LEN) != 0) return NULL;
+    PNG_VALIDATE(PNG_CHUNK_TEXT, NULL);
 
     return strdup(chunk->data);
 }
@@ -728,7 +676,7 @@ char *png_tEXt_keyword(png_chunk_t *chunk) {
  *          keyword on success; must be free'd
  */
 char *png_tEXt_text(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_TEXT, PNG_CHNK_LEN) != 0) return NULL;
+    PNG_VALIDATE(PNG_CHUNK_TEXT, NULL);
 
     int c = strlen(chunk->data) + 1;
     char *text = (char *) malloc(chunk->length - c + 1);
@@ -746,9 +694,7 @@ char *png_tEXt_text(png_chunk_t *chunk) {
  *          keyword on success; must be free'd
  */
 char *png_zTXt_keyword(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_TEXT, PNG_CHNK_LEN) != 0) return NULL;
-
-    if (chunk->data == NULL || chunk->length == 0) return NULL;
+    PNG_VALIDATE(PNG_CHUNK_TEXT, NULL);
 
     return strdup(chunk->data);
 }
@@ -760,9 +706,7 @@ char *png_zTXt_keyword(png_chunk_t *chunk) {
  *          compression method (>= 0)
  */
 char png_zTXt_method(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_TEXT_COMPRESSED, PNG_CHNK_LEN) != 0) return -1;
-
-    if (chunk->data == NULL || chunk->length == 0) return -1;
+    PNG_VALIDATE(PNG_CHUNK_TEXT_COMPRESSED, -1);
 
     return *((char *) chunk->data + strlen(chunk->data) + 1);
 }
@@ -774,9 +718,7 @@ char png_zTXt_method(png_chunk_t *chunk) {
  *          Pointer to block containing datastream; must be free'd
  */
 void *png_zTXt_data(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_TEXT_COMPRESSED, PNG_CHNK_LEN) != 0) return NULL;
-
-    if (chunk->data == NULL || chunk->length == 0) return NULL;
+    PNG_VALIDATE(PNG_CHUNK_TEXT_COMPRESSED, NULL);
 
     int len = strlen(chunk->data) + 2;
     int n = chunk->length - len;
@@ -792,9 +734,7 @@ void *png_zTXt_data(png_chunk_t *chunk) {
  *          Length of datastream
  */
 int png_zTXt_length(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_TEXT_COMPRESSED, PNG_CHNK_LEN) != 0) return -1;
-
-    if (chunk->data == NULL || chunk->length == 0) return -1;
+    PNG_VALIDATE(PNG_CHUNK_TEXT_COMPRESSED, -1);
 
     return chunk->length - (strlen(chunk->data) + 2);
 }
@@ -806,9 +746,7 @@ int png_zTXt_length(png_chunk_t *chunk) {
  *          Array of values corresponding to appropriate background color channels; must be free'd
  */
 void *png_bKGD_get(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_BACKGROUND, PNG_CHNK_LEN) != 0) return NULL;
-
-    if (chunk->length == 0 || chunk->data == NULL) return NULL;
+    PNG_VALIDATE(PNG_CHUNK_BACKGROUND, NULL);
 
     int type = png_attr_col_type(chunk->png);
     void *array = NULL;
@@ -840,9 +778,7 @@ void *png_bKGD_get(png_chunk_t *chunk) {
  * Returns: -1 on error
  */
 int png_bKGD_len(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_BACKGROUND, PNG_CHNK_LEN) != 0) return -1;
-
-    if (chunk->length == 0 || chunk->data == NULL) return -1;
+    PNG_VALIDATE(PNG_CHUNK_BACKGROUND, -1);
 
     switch (png_attr_col_type(chunk->png)) {
         case 0:
@@ -865,9 +801,7 @@ int png_bKGD_len(png_chunk_t *chunk) {
  *          Array of values representing the frequencies of the colors contained in the PLTE chunk; must be free'd
  */
 unsigned short *png_hIST_get(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_HISTOGRAM, PNG_CHNK_LEN) != 0) return NULL;
-
-    if (chunk->length == 0 || chunk->data == NULL) return NULL;
+    PNG_VALIDATE(PNG_CHUNK_HISTOGRAM, NULL);
 
     switch (png_attr_col_type(chunk->png)) {
         case 2:
@@ -891,9 +825,7 @@ unsigned short *png_hIST_get(png_chunk_t *chunk) {
  * Returns: -1 on error
  */
 int png_hIST_len(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_HISTOGRAM, PNG_CHNK_LEN) != 0) return -1;
-
-    if (chunk->length == 0 || chunk->data == NULL) return -1;
+    PNG_VALIDATE(PNG_CHUNK_HISTOGRAM, -1);
 
     switch (png_attr_col_type(chunk->png)) {
         case 2:
@@ -914,9 +846,7 @@ int png_hIST_len(png_chunk_t *chunk) {
  *          pixels per unit on success
  */
 int png_pHYs_ppuX(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_PHYS, PNG_CHNK_LEN) != 0) return -1;
-
-    if (chunk->length < 4) return -1;
+    PNG_VALIDATE(PNG_CHUNK_PHYS, -1);
 
     return ntohl(*((int *)chunk->data));
 }
@@ -928,9 +858,7 @@ int png_pHYs_ppuX(png_chunk_t *chunk) {
  *          pixels per unit on success
  */
 int png_pHYs_ppuY(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_PHYS, PNG_CHNK_LEN) != 0) return -1;
-
-    if (chunk->length < 8) return -1;
+    PNG_VALIDATE(PNG_CHUNK_PHYS, -1);
 
     return ntohl(*((int *)(chunk->data + 4)));
 }
@@ -943,9 +871,7 @@ int png_pHYs_ppuY(png_chunk_t *chunk) {
  *           1 for meter
  */
 char png_pHYs_unit(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_PHYS, PNG_CHNK_LEN) != 0) return -1;
-
-    if (chunk->length < 9) return -1;
+    PNG_VALIDATE(PNG_CHUNK_PHYS, -1);
 
     return *((char *) chunk->data + 9);
 }
@@ -957,9 +883,7 @@ char png_pHYs_unit(png_chunk_t *chunk) {
  *          Name of the palette; must be free'd
  */
 char *png_sPLT_name(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_SPALETTE, PNG_CHNK_LEN) != 0) return NULL;
-
-    if (chunk->length == 0 || chunk->data == NULL) return NULL;
+    PNG_VALIDATE(PNG_CHUNK_SPALETTE, NULL);
 
     return strdup(chunk->data);
 }
@@ -970,9 +894,7 @@ char *png_sPLT_name(png_chunk_t *chunk) {
  * Returns: -1 on error
  */
 char png_sPLT_sample_depth(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_SPALETTE, PNG_CHNK_LEN) != 0) return -1;
-
-    if (chunk->length == 0 || chunk->data == NULL) return -1;
+    PNG_VALIDATE(PNG_CHUNK_SPALETTE, -1);
 
     int offset = strlen(chunk->data) + 1;
 
@@ -986,9 +908,7 @@ char png_sPLT_sample_depth(png_chunk_t *chunk) {
  *          Array of entries on success; must be free'd
  */
 palette_entry_t *png_sPLT_entries(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_SPALETTE, PNG_CHNK_LEN) != 0) return NULL;
-
-    if (chunk->length == 0 || chunk->data == NULL) return NULL;
+    PNG_VALIDATE(PNG_CHUNK_SPALETTE, NULL);
 
     int offset = strlen(chunk->data) + 2, i;
     int size = chunk->length - offset, entry_size = 10;
@@ -1034,9 +954,7 @@ palette_entry_t *png_sPLT_entries(png_chunk_t *chunk) {
  * Returns: -1 on error
  */
 int png_sPLT_entries_len(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_SPALETTE, PNG_CHNK_LEN) != 0) return -1;
-
-    if (chunk->length == 0 || chunk->data == NULL) return -1;
+    PNG_VALIDATE(PNG_CHUNK_SPALETTE, -1);
 
     int size = chunk->length - (strlen(chunk->data) + 2);
 
@@ -1057,9 +975,7 @@ int png_sPLT_entries_len(png_chunk_t *chunk) {
  *          10 if the rgba channels can be stored in two bytes
  */
 int png_sPLT_entry_size(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_SPALETTE, PNG_CHNK_LEN) != 0) return -1;
-
-    if (chunk->length == 0 || chunk->data == NULL) return -1;
+    PNG_VALIDATE(PNG_CHUNK_SPALETTE, -1);
 
     int sample_depth  = *((int *) (chunk->data + strlen(chunk->data) + 1));
 
@@ -1079,7 +995,7 @@ int png_sPLT_entry_size(png_chunk_t *chunk) {
  *          Complete year (eg. 1995, not 95) on success
  */
 short png_tIME_year(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_TIME, PNG_CHNK_LEN) != 0) return -1;
+    PNG_VALIDATE(PNG_CHUNK_TIME, -1);
 
     return ntohs(*((short *) (chunk->data)));
 }
@@ -1091,7 +1007,7 @@ short png_tIME_year(png_chunk_t *chunk) {
  *          Month (1-12) on success
  */
 char png_tIME_month(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_TIME, PNG_CHNK_LEN) != 0) return -1;
+    PNG_VALIDATE(PNG_CHUNK_TIME, -1);
 
     return *((char *) (chunk->data + 2));
 }
@@ -1103,7 +1019,7 @@ char png_tIME_month(png_chunk_t *chunk) {
  *          Day (1-31) on success
  */
 char png_tIME_day(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_TIME, PNG_CHNK_LEN) != 0) return -1;
+    PNG_VALIDATE(PNG_CHUNK_TIME, -1);
 
     return *((char *) (chunk->data + 3));
 }
@@ -1115,7 +1031,7 @@ char png_tIME_day(png_chunk_t *chunk) {
  *          Hour (0-23) on success
  */
 char png_tIME_hour(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_TIME, PNG_CHNK_LEN) != 0) return -1;
+    PNG_VALIDATE(PNG_CHUNK_TIME, -1);
 
     return *((char *) (chunk->data + 4));
 }
@@ -1127,7 +1043,7 @@ char png_tIME_hour(png_chunk_t *chunk) {
  *          Minute (0-59) on success
  */
 char png_tIME_minute(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_TIME, PNG_CHNK_LEN) != 0) return -1;
+    PNG_VALIDATE(PNG_CHUNK_TIME, -1);
 
     return *((char *) (chunk->data + 5));
 }
@@ -1139,7 +1055,7 @@ char png_tIME_minute(png_chunk_t *chunk) {
  *          Second (0-60 to allow for leap seconds) on success
  */
 char png_tIME_second(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_TIME, PNG_CHNK_LEN) != 0) return -1;
+    PNG_VALIDATE(PNG_CHUNK_TIME, -1);
 
     return *((char *) (chunk->data + 6));
 }
@@ -1151,7 +1067,7 @@ char png_tIME_second(png_chunk_t *chunk) {
  *          Last modified date in ISO 8601 format: YYYY-MM-DDTHH:MM:SS+00:00
  */
 char *png_tIME_iso8601(png_chunk_t *chunk) {
-    if (strncmp(chunk->type, PNG_CHUNK_TIME, PNG_CHNK_LEN) != 0) return NULL;
+    PNG_VALIDATE(PNG_CHUNK_TIME, NULL);
 
     char *time = (char *) malloc(sizeof(char) * 26); // Prefer not to hardcode the length in
 
