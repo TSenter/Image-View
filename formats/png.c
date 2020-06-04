@@ -800,6 +800,114 @@ int png_zTXt_length(png_chunk_t *chunk) {
 }
 
 /*
+ * Fetch the background color information of the image
+ * 
+ * Returns: NULL on error
+ *          Array of values corresponding to appropriate background color channels; must be free'd
+ */
+void *png_bKGD_get(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_BACKGROUND, PNG_CHNK_LEN) != 0) return NULL;
+
+    if (chunk->length == 0 || chunk->data == NULL) return NULL;
+
+    int type = png_attr_col_type(chunk->png);
+    void *array = NULL;
+
+    if (type == 0 || type == 4) {
+        array = malloc(sizeof(short));
+
+        short s = *((short *)chunk->data);
+        ((short *)array)[0] = ntohs(s);
+    } else if (type == 2 || type == 6) {
+        array = malloc(sizeof(short) * 3);
+
+        short *s = (short *)chunk->data;
+        ((short *)array)[0] = ntohs(s[0]);
+        ((short *)array)[1] = ntohs(s[1]);
+        ((short *)array)[2] = ntohs(s[2]);
+    } else if (type == 3) {
+        array == malloc(sizeof(char));
+
+        ((char *)array)[0] = *((char *)chunk->data);
+    }
+
+    return array;
+}
+
+/*
+ * Fetch the length of the array returned by `png_bKGD_get()`; this is the length of the array in bytes, not elements
+ * 
+ * Returns: -1 on error
+ */
+int png_bKGD_len(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_BACKGROUND, PNG_CHNK_LEN) != 0) return -1;
+
+    if (chunk->length == 0 || chunk->data == NULL) return -1;
+
+    switch (png_attr_col_type(chunk->png)) {
+        case 0:
+        case 4:
+            return 2;
+        case 2:
+        case 6:
+            return 6;
+        case 3:
+            return 1;
+        default:
+            return -1;
+    }
+}
+
+/*
+ * Fetch the histogram of the image
+ * 
+ * Returns: NULL on error
+ *          Array of values representing the frequencies of the colors contained in the PLTE chunk; must be free'd
+ */
+unsigned short *png_hIST_get(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_HISTOGRAM, PNG_CHNK_LEN) != 0) return NULL;
+
+    if (chunk->length == 0 || chunk->data == NULL) return NULL;
+
+    switch (png_attr_col_type(chunk->png)) {
+        case 2:
+        case 3:
+        case 6:
+            break;
+        default:
+            return NULL;
+    }
+
+    unsigned short *array = (unsigned short *) malloc(chunk->length);
+
+    memcpy(array, chunk->data, chunk->length);
+
+    return array;
+}
+
+/*
+ * Fetch the length of the histogram of the image
+ * 
+ * Returns: -1 on error
+ */
+int png_hIST_len(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_HISTOGRAM, PNG_CHNK_LEN) != 0) return -1;
+
+    if (chunk->length == 0 || chunk->data == NULL) return -1;
+
+    switch (png_attr_col_type(chunk->png)) {
+        case 2:
+        case 3:
+        case 6:
+            break;
+        default:
+            return -1;
+    }
+
+    return chunk->length / sizeof(unsigned short);
+}
+
+/*
  * Extract the pixels per unit along the X axis
  * 
  * Returns: -1 on error
@@ -840,6 +948,128 @@ char png_pHYs_unit(png_chunk_t *chunk) {
     if (chunk->length < 9) return -1;
 
     return *((char *) chunk->data + 9);
+}
+
+/*
+ * Fetch the name of the suggested palette
+ * 
+ * Returns: NULL on error
+ *          Name of the palette; must be free'd
+ */
+char *png_sPLT_name(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_SPALETTE, PNG_CHNK_LEN) != 0) return NULL;
+
+    if (chunk->length == 0 || chunk->data == NULL) return NULL;
+
+    return strdup(chunk->data);
+}
+
+/*
+ * Fetch the sample depth of the suggested palette
+ * 
+ * Returns: -1 on error
+ */
+char png_sPLT_sample_depth(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_SPALETTE, PNG_CHNK_LEN) != 0) return -1;
+
+    if (chunk->length == 0 || chunk->data == NULL) return -1;
+
+    int offset = strlen(chunk->data) + 1;
+
+    return *((char *)chunk->data + offset);
+}
+
+/*
+ * Fetch an array of entries in the suggested palette
+ * 
+ * Returns: NULL on error
+ *          Array of entries on success; must be free'd
+ */
+palette_entry_t *png_sPLT_entries(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_SPALETTE, PNG_CHNK_LEN) != 0) return NULL;
+
+    if (chunk->length == 0 || chunk->data == NULL) return NULL;
+
+    int offset = strlen(chunk->data) + 2, i;
+    int size = chunk->length - offset, entry_size = 10;
+    int num_entries;
+    void *data = chunk->data + offset;
+
+    if (size % 6 == 0) {
+        num_entries = size / 6;
+        size = 6;
+    } else if (size % 10 == 0) {
+        num_entries = size / 10;
+        size = 10;
+    } else {
+        return NULL;
+    }
+
+    palette_entry_t *entries = (palette_entry_t *) malloc(sizeof(palette_entry_t) * num_entries);
+
+    if (size == 6) {
+        for (i = 0; i < num_entries; i++) {
+            entries[i].red       = *((char *)(data + (i * size + 0)));
+            entries[i].green     = *((char *)(data + (i * size + 1)));
+            entries[i].blue      = *((char *)(data + (i * size + 2)));
+            entries[i].alpha     = *((char *)(data + (i * size + 3)));
+            entries[i].frequency = ntohs(*((short *)(data + (i * size + 4))));
+        }
+    } else {
+        for (i = 0; i < num_entries; i++) {
+            entries[i].red       = ntohs(*((short *)(data + (i * size + 0))));
+            entries[i].green     = ntohs(*((short *)(data + (i * size + 2))));
+            entries[i].blue      = ntohs(*((short *)(data + (i * size + 4))));
+            entries[i].alpha     = ntohs(*((short *)(data + (i * size + 6))));
+            entries[i].frequency = ntohs(*((short *)(data + (i * size + 8))));
+        }
+    }
+
+    return entries;
+}
+
+/*
+ * Fetch the number of entries in the suggested palette
+ * 
+ * Returns: -1 on error
+ */
+int png_sPLT_entries_len(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_SPALETTE, PNG_CHNK_LEN) != 0) return -1;
+
+    if (chunk->length == 0 || chunk->data == NULL) return -1;
+
+    int size = chunk->length - (strlen(chunk->data) + 2);
+
+    if (size % 6 == 0) {
+        return size / 6;
+    } else if (size % 10 == 0) {
+        return size / 10;
+    } else {
+        return -1;
+    }
+}
+
+/*
+ * Fetch the minimum amount of space (in bytes) required to store one entry in the suggested palette
+ * 
+ * Returns: -1 on error
+ *           6 if the rgba channels can be stored in one byte
+ *          10 if the rgba channels can be stored in two bytes
+ */
+int png_sPLT_entry_size(png_chunk_t *chunk) {
+    if (strncmp(chunk->type, PNG_CHUNK_SPALETTE, PNG_CHNK_LEN) != 0) return -1;
+
+    if (chunk->length == 0 || chunk->data == NULL) return -1;
+
+    int sample_depth  = *((int *) (chunk->data + strlen(chunk->data) + 1));
+
+    if (sample_depth == 8) {
+        return 6;
+    } else if (sample_depth == 16) {
+        return 10;
+    } else {
+        return -1;
+    }
 }
 
 /*

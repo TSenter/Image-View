@@ -23,11 +23,26 @@
 #define PNG_CHUNK_TEXT_INT        "iTXt"
 #define PNG_CHUNK_TEXT            "tEXt"
 #define PNG_CHUNK_TEXT_COMPRESSED "zTXt"
+#define PNG_CHUNK_BACKGROUND      "bKGD"
+#define PNG_CHUNK_HISTOGRAM       "hIST"
 #define PNG_CHUNK_PHYS            "pHYs"
+#define PNG_CHUNK_SPALETTE        "sPLT"
 #define PNG_CHUNK_TIME            "tIME"
 
 #define PNG_ISCRITICAL(chunk)  (chunk->type[0] & 0x20 != 0)
 #define PNG_ISANCILLARY(chunk) (chunk->type[0] & 0x20 == 0)
+
+typedef unsigned char byte;
+typedef unsigned short ushort;
+typedef unsigned int uint;
+
+typedef struct palette_entry {
+    ushort red;
+    ushort green;
+    ushort blue;
+    ushort alpha;
+    ushort frequency;
+} palette_entry_t;
 
 typedef struct png_chunk {
     unsigned int length;
@@ -106,9 +121,21 @@ char png_zTXt_method(png_chunk_t *);
 void *png_zTXt_data(png_chunk_t *);
 int png_zTXt_length(png_chunk_t *);
 
+void *png_bKGD_get(png_chunk_t *);
+int png_bKGD_len(png_chunk_t *);
+
+unsigned short *png_hIST_get(png_chunk_t *);
+int png_hIST_len(png_chunk_t *);
+
 int png_pHYs_ppuX(png_chunk_t *);
 int png_pHYs_ppuY(png_chunk_t *);
 char png_pHYs_unit(png_chunk_t *);
+
+char *png_sPLT_name(png_chunk_t *);
+char png_sPLT_sample_depth(png_chunk_t *);
+palette_entry_t *png_sPLT_entries(png_chunk_t *);
+int png_sPLT_entries_len(png_chunk_t *);
+int png_sPLT_entry_size(png_chunk_t *);
 
 short png_tIME_year(png_chunk_t *);
 char png_tIME_month(png_chunk_t *);

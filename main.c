@@ -170,6 +170,20 @@ void handle_png(Format_PNG png) {
 
                 printf("    Rendering intent: %s\n", s);
 
+            } else if (strncmp(chunk->type, PNG_CHUNK_BACKGROUND, PNG_CHNK_LEN) == 0) {
+                int size = png_bKGD_len(chunk);
+                void *array = png_bKGD_get(chunk);
+                short *s = (short *) array;
+
+                if (size == 2) {
+                    printf("    Grayscale: 0x%hx\n", s[0]);
+                } else if (size == 6) {
+                    printf("    HTML Code: 0x%hx%hx%hx\n", s[0], s[1], s[2]);
+                } else if (size == 1) {
+                    printf("    Palette index: %hhd\n", *((char *)array));
+                }
+
+                free(array);
             }
         }
 

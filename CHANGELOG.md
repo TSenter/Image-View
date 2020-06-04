@@ -4,6 +4,13 @@
 
 Incremental support for PNG image types is being added
 
+### v0.1.6
+
+* Added support for remaining miscellaneous chunk types
+  * `bKGD` chunks can be processed through the `png_bKGD_*()` functions
+  * `hIST` chunks can be processed through the `png_hIST_*()` functions
+  * `sPLT` chunks can be processed through the `png_sPLT_*()` functions
+
 ### v0.1.5a
 
 * Refactor functions to more accurately represent chunk order, as defined in the International Standard
