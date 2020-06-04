@@ -1,7 +1,6 @@
 #ifndef __IV_FORMAT_PNG
 #define __IV_FORMAT_PNG
 #include <stdio.h>
-#include "../utils/types.h"
 
 #define PNG_SIG 0x0A1A0A0D474E5089
 #define PNG_SIG_SZ 8
