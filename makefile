@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-g
+CFLAGS=
 DEPS = formats/png.h
 OBJ = main.o formats/png.o
 

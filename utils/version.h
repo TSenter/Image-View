@@ -10,7 +10,7 @@
 #endif
 
 /* Version */
-#define IV_VERSION "v0.0.0"
-#define IV_UPDATED "2020-05-05"
+#define IV_VERSION "v0.1.7"
+#define IV_UPDATED "2020-06-03"
 
 #endif
